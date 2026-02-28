@@ -1,0 +1,45 @@
+# Core API
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+
+# Validation & config
+pydantic==2.10.3
+pydantic-settings==2.6.1
+python-dotenv==1.0.1
+
+# AI / LangChain stack (used in later phases)
+langchain==0.3.7
+langgraph==0.2.45
+langchain-community==0.3.7
+langchain-openai==0.2.9
+openai==1.54.0
+
+# Vector DB & embeddings
+chromadb==0.5.20
+sentence-transformers==3.3.1
+
+# Data sources
+yfinance==0.2.44
+requests==2.32.3
+beautifulsoup4==4.12.3
+
+# Evaluation
+ragas==0.2.6
+datasets==3.1.0
+
+# Observability
+langfuse==2.57.0
+
+# UI
+streamlit==1.40.2
+
+# PDF generation
+reportlab==4.2.5
+
+# Dev tools
+pytest==8.3.4
+pytest-asyncio==0.24.0
+ruff==0.8.3
+black==24.10.0
+mypy==1.13.0
+httpx==0.28.1
