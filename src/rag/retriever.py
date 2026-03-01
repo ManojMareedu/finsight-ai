@@ -1,8 +1,7 @@
 import os
-
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
-from typing import List
+from typing import List, Optional, Dict, Any
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -10,7 +9,7 @@ from langchain_core.documents import Document
 from src.rag.embeddings import get_embeddings
 
 
-def get_retriever(company_filter: str = None):
+def get_retriever(company_filter: Optional[str] = None):
     """
     ChromaDB retriever using MMR search.
     """
@@ -21,7 +20,8 @@ def get_retriever(company_filter: str = None):
         collection_name="financial_filings",
     )
 
-    search_kwargs = {
+    # Explicit typing avoids mypy conflicts
+    search_kwargs: Dict[str, Any] = {
         "k": 6,
         "fetch_k": 20,
         "lambda_mult": 0.7,
@@ -36,6 +36,10 @@ def get_retriever(company_filter: str = None):
     )
 
 
-def retrieve_context(query: str, company: str = None) -> List[Document]:
+def retrieve_context(
+    query: str,
+    company: Optional[str] = None
+) -> List[Document]:
+
     retriever = get_retriever(company_filter=company)
     return retriever.invoke(query)

@@ -7,6 +7,8 @@ from pydantic import BaseModel
 from src.observability.tracer import get_tracer
 from src.utils.config import get_settings
 
+from typing import Optional
+
 
 @lru_cache(maxsize=1)
 def get_llm_client() -> OpenAI:
@@ -18,7 +20,7 @@ def get_llm_client() -> OpenAI:
     )
 
 
-def chat(messages: list, model: str = None) -> str:
+def chat(messages: list, model: Optional[str] = None) -> str:
     settings = get_settings()
     client = get_llm_client()
 
@@ -40,18 +42,19 @@ def chat(messages: list, model: str = None) -> str:
         max_tokens=2048,
     )
 
-    output = response.choices[0].message.content
+    output = response.choices[0].message.content or ""
 
     if trace:
         try:
             trace.update(output=output)
+            trace.end()
         except Exception:
             pass
 
     return output
 
 
-def structured_chat(messages: list, schema: type[BaseModel], model: str = None):
+def structured_chat(messages: list, schema, model: Optional[str] = None):
     """
     Structured chat with defensive parsing + retries.
     """
