@@ -12,3 +12,6 @@ test:
 
 lint:
 	ruff check src/ && black --check src/ && mypy src/
+
+eval:
+	python -m src.evaluation.ragas_eval

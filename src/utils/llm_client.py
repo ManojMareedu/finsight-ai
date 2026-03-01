@@ -2,6 +2,7 @@ from openai import OpenAI
 from pydantic import BaseModel
 from functools import lru_cache
 from src.utils.config import get_settings
+from src.observability.tracer import get_tracer
 import json
 
 
@@ -19,13 +20,33 @@ def chat(messages: list, model: str = None) -> str:
     settings = get_settings()
     client = get_llm_client()
 
+    tracer = None
+    trace = None
+
+    try:
+        tracer = get_tracer()
+        trace = tracer.trace(
+            name="llm_chat",
+            metadata={"model": model or settings.primary_model},
+        )
+    except Exception:
+        pass
+
     response = client.chat.completions.create(
         model=model or settings.primary_model,
         messages=messages,
         max_tokens=2048,
     )
 
-    return response.choices[0].message.content
+    output = response.choices[0].message.content
+
+    if trace:
+        try:
+            trace.update(output=output)
+        except Exception:
+            pass
+
+    return output
 
 
 def structured_chat(messages: list, schema: type[BaseModel], model: str = None):
