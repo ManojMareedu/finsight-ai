@@ -1,5 +1,5 @@
-from typing import TypedDict, Annotated, List, Optional
 from operator import add
+from typing import Annotated, List, Optional, TypedDict
 
 
 class DueDiligenceState(TypedDict):

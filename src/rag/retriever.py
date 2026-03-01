@@ -1,10 +1,13 @@
 import os
+
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
-from langchain_chroma import Chroma
-from src.rag.embeddings import get_embeddings
 from typing import List
+
+from langchain_chroma import Chroma
 from langchain_core.documents import Document
+
+from src.rag.embeddings import get_embeddings
 
 
 def get_retriever(company_filter: str = None):

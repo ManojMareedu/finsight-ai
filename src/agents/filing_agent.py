@@ -1,6 +1,7 @@
+import logging
+
 from src.graph.state import DueDiligenceState
 from src.rag.retriever import retrieve_context
-import logging
 
 logger = logging.getLogger(__name__)
 
