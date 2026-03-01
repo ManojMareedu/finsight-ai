@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Mapping, Any, cast
 
 import chromadb
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -64,15 +65,16 @@ def ingest_company_filing(company_name: str, ticker: str, chroma_dir: str) -> in
     texts = [c.page_content for c in chunks]
     metadatas = [c.metadata for c in chunks]
 
-    embeddings = embeddings_model.embed_documents(texts)
+    embeddings = cast(Any, embeddings_model.embed_documents(texts))
+    metadatas = cast(Any, metadatas)
 
     ids = [f"{ticker}_{i}" for i in range(len(texts))]
 
-    collection.add(
-        documents=texts,
-        embeddings=embeddings,
-        metadatas=metadatas,
+    collection.add( 
         ids=ids,
+        embeddings=embeddings,
+        metadatas=cast(list[Mapping[str, Any]], metadatas),
+        documents=texts,
     )
 
     return len(chunks)

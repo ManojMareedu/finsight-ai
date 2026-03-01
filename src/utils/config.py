@@ -40,4 +40,4 @@ def get_settings() -> Settings:
     Singleton settings instance.
     Reads .env once.
     """
-    return Settings()
+    return Settings()  # type: ignore
