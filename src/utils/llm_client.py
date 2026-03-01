@@ -1,13 +1,11 @@
 import json
 from functools import lru_cache
+from typing import Optional
 
 from openai import OpenAI
-from pydantic import BaseModel
 
 from src.observability.tracer import get_tracer
 from src.utils.config import get_settings
-
-from typing import Optional
 
 
 @lru_cache(maxsize=1)

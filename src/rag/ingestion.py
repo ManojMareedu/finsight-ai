@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Mapping, Any, cast
+from typing import Any, Mapping, cast
 
 import chromadb
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -70,7 +70,7 @@ def ingest_company_filing(company_name: str, ticker: str, chroma_dir: str) -> in
 
     ids = [f"{ticker}_{i}" for i in range(len(texts))]
 
-    collection.add( 
+    collection.add(
         ids=ids,
         embeddings=embeddings,
         metadatas=cast(list[Mapping[str, Any]], metadatas),
