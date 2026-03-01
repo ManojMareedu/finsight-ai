@@ -1,5 +1,7 @@
-from langfuse import Langfuse
 from functools import lru_cache
+
+from langfuse import Langfuse
+
 from src.utils.config import get_settings
 
 

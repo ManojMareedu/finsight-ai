@@ -1,9 +1,12 @@
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from src.rag.embeddings import get_embeddings
-from src.utils.data_fetchers import get_company_cik, get_latest_10k_text
-import chromadb
 import logging
 import os
+
+import chromadb
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+from src.rag.embeddings import get_embeddings
+from src.utils.data_fetchers import get_company_cik, get_latest_10k_text
+
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
 logger = logging.getLogger(__name__)

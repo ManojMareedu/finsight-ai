@@ -1,7 +1,8 @@
-from sentence_transformers import SentenceTransformer
-from langchain.embeddings.base import Embeddings
 from functools import lru_cache
 from typing import List
+
+from langchain.embeddings.base import Embeddings
+from sentence_transformers import SentenceTransformer
 
 
 class LocalEmbeddings(Embeddings):

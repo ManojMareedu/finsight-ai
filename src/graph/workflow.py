@@ -1,9 +1,9 @@
-from langgraph.graph import StateGraph, END
-from src.graph.state import DueDiligenceState
+from langgraph.graph import END, StateGraph
 
 from src.agents.filing_agent import filing_agent
 from src.agents.risk_agent import risk_agent
 from src.agents.synthesis_agent import synthesis_agent
+from src.graph.state import DueDiligenceState
 
 
 def build_workflow():

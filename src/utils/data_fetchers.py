@@ -1,8 +1,8 @@
+import logging
+from typing import Optional
+
 import requests
 import yfinance as yf
-from bs4 import BeautifulSoup
-from typing import Optional
-import logging
 
 logger = logging.getLogger(__name__)
 

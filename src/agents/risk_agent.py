@@ -1,7 +1,8 @@
-from src.graph.state import DueDiligenceState
-from src.utils.llm_client import structured_chat
-from src.models.schemas import RiskAnalysis
 import logging
+
+from src.graph.state import DueDiligenceState
+from src.models.schemas import RiskAnalysis
+from src.utils.llm_client import structured_chat
 
 logger = logging.getLogger(__name__)
 

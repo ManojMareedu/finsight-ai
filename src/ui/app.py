@@ -1,5 +1,5 @@
-import streamlit as st
 import requests
+import streamlit as st
 
 st.set_page_config(page_title="FinSight AI", layout="wide")
 
