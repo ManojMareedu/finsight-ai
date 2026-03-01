@@ -2,8 +2,7 @@
 title: FinSight AI
 emoji: 📊
 colorFrom: blue
-colorTo: indigo
+colorTo: purple
 sdk: docker
-app_file: app.py
-pinned: false
+app_port: 7860
 ---
