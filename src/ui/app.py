@@ -12,7 +12,7 @@ if st.button("Analyze Company"):
     with st.spinner("Running AI analysis..."):
 
         resp = requests.post(
-            "http://localhost:8000/analyze",
+            "http://127.0.0.1:8000/analyze",
             json={"company_name": company},
             timeout=120
         )
