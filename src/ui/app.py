@@ -11,18 +11,22 @@ if st.button("Analyze Company"):
 
     with st.spinner("Running AI analysis..."):
 
-        resp = requests.post(
-            "http://127.0.0.1:8000/analyze",
-            json={"company_name": company},
-            timeout=120
+        try:
+            resp = requests.post(
+                "http://127.0.0.1:8000/analyze",
+                json={"company_name": company},
+                timeout=120,
         )
 
-        if resp.status_code != 200:
-            st.error(f"API Error: {resp.status_code}")
-            st.text(resp.text)
+            if resp.status_code != 200:
+                st.error(f"API error: {resp.text}")
             st.stop()
 
-        data = resp.json()
+            data = resp.json()
+
+        except Exception as e:
+            st.error(f"Request failed: {e}")
+            st.stop()
 
     report = data["report"]
 
