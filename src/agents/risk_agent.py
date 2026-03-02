@@ -18,7 +18,9 @@ def risk_agent(state: DueDiligenceState) -> dict:
         {
             "role": "system",
             "content": (
-                "You are a financial risk analyst. "
+                "You are a strict financial risk analyst. "
+                "ALWAYS identify at least 3 realistic risks from the context. "
+                "If risks are unclear, infer reasonable financial risks based on the filing."
                 "Identify key business and financial risks."
             ),
         },
