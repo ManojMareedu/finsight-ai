@@ -15,17 +15,18 @@ if st.button("Analyze Company"):
             resp = requests.post(
                 "http://127.0.0.1:8000/analyze",
                 json={"company_name": company},
-                timeout=120,
-        )
+                timeout=600,
+            )
 
-            if resp.status_code != 200:
-                st.error(f"API error: {resp.text}")
-            st.stop()
+            resp.raise_for_status()
 
             data = resp.json()
+            if not data.get("report"):
+                st.error("No report returned from backend.")
+                st.stop()
 
         except Exception as e:
-            st.error(f"Request failed: {e}")
+            st.error(f"Backend error: {e}")
             st.stop()
 
     report = data["report"]
