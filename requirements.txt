@@ -13,10 +13,12 @@ langgraph==0.2.45
 langchain-community==0.3.7
 langchain-openai==0.2.9
 openai==1.54.0
+langchain-chroma==0.1.4
 
 # Vector DB & embeddings
 chromadb==0.5.20
 sentence-transformers==3.3.1
+
 
 # Data sources
 yfinance==0.2.44
