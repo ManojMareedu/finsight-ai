@@ -12,7 +12,7 @@ def risk_agent(state: DueDiligenceState) -> dict:
     Analyze financial risks from retrieved filing context.
     """
 
-    context = "\n\n".join(state.get("retrieved_context", [])[:4])
+    context = "\n\n".join(state.get("retrieved_context", [])[:2])
 
     messages = [
         {
