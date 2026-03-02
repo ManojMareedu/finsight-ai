@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from typing import Any, Mapping, cast
 
 import chromadb
@@ -38,6 +39,8 @@ def ingest_company_filing(company_name: str, ticker: str, chroma_dir: str) -> in
     if not raw_text:
         logger.warning("No filing text")
         return 0
+    # CLEAN SEC TEXT
+    raw_text = clean_sec_text(raw_text)
 
     # Split into chunks
     chunks = splitter.create_documents(
@@ -78,3 +81,19 @@ def ingest_company_filing(company_name: str, ticker: str, chroma_dir: str) -> in
     )
 
     return len(chunks)
+
+
+def clean_sec_text(text: str) -> str:
+    """
+    Remove SEC XBRL / XML noise.
+    """
+    # remove XML/HTML tags
+    text = re.sub(r"<[^>]+>", " ", text)
+
+    # remove URLs
+    text = re.sub(r"http\S+", " ", text)
+
+    # collapse whitespace
+    text = re.sub(r"\s+", " ", text)
+
+    return text.strip()
