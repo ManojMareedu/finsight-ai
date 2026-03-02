@@ -21,6 +21,7 @@ if st.button("Analyze Company"):
             resp.raise_for_status()
 
             data = resp.json()
+            st.write("DEBUG RESPONSE:", data)
             if not data.get("report"):
                 st.error("No report returned from backend.")
                 st.stop()

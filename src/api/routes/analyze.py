@@ -19,7 +19,15 @@ def analyze(payload: dict):
         "company_name": company
     })
 
+    report = result.get("final_report")
+
+    if not report:
+        return {
+            "company": company,
+            "error": "Workflow completed but no report generated"
+        }
+
     return {
         "company": company,
-        "report": result.get("final_report")
+        "report": report
     }
