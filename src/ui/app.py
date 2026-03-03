@@ -223,10 +223,11 @@ def main() -> None:
         pdf_b64 = data.get("pdf_base64")
         if include_pdf and pdf_b64:
             pdf_bytes = base64.b64decode(pdf_b64)
+            fname=f"finsight_{company.strip().replace(' ', '_')}_{datetime.now():%Y%m%d}.pdf"
             st.download_button(
                 label="⬇️ Download PDF Report",
                 data=pdf_bytes,
-                file_name=f"finsight_{company.strip().replace(' ', '_')}_{datetime.now():%Y%m%d}.pdf",
+                file_name=fname,
                 mime="application/pdf",
             )
         elif include_pdf and not pdf_b64:

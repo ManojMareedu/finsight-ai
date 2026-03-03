@@ -1,10 +1,11 @@
 
+import base64
+import logging
+import time
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional
-import base64
-import time
-import logging
 
 from src.graph.workflow import build_workflow
 from src.utils.pdf_generator import generate_pdf
