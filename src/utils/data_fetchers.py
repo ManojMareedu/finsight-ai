@@ -4,7 +4,6 @@ import re
 from typing import Optional
 
 import requests
-
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
@@ -221,7 +220,7 @@ def get_financials_from_edgar(cik: str) -> dict:
 
     if revenue:
         result["revenue"] = _fmt_large(revenue)
-    
+
     revenue_growth = _revenue_growth(us_gaap, [
     "RevenueFromContractWithCustomerExcludingAssessedTax",
     "Revenues",

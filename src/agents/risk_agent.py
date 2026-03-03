@@ -1,9 +1,9 @@
 
+import json
 import logging
 
 from src.graph.state import DueDiligenceState
 from src.utils.llm_client import chat
-import json
 
 logger = logging.getLogger(__name__)
 

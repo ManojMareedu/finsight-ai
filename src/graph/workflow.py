@@ -33,7 +33,7 @@ def route_after_risk(state: DueDiligenceState) -> str:
 
 
 def build_workflow():
-    """
+    r"""
     Build and compile the LangGraph workflow.
 
     Flow:
