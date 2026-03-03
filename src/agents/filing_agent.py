@@ -22,6 +22,8 @@ def filing_agent(state: DueDiligenceState) -> dict:
     """
     company = state["company_name"]
     provided_ticker = state.get("company_ticker", "")
+    if provided_ticker is None:
+        raise ValueError("Ticker must not be None")
     ticker = resolve_ticker(company, provided_ticker)
     settings = get_settings()
 
