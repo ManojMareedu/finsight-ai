@@ -11,7 +11,7 @@ app_port: 7860
 > Multi-Agent Financial Due Diligence Platform
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-HuggingFace-yellow?style=for-the-badge&logo=huggingface)](https://huggingface.co/spaces/ManojM25/finsight-ai)
-[![API Docs](https://img.shields.io/badge/API%20Docs-FastAPI-009688?style=for-the-badge&logo=fastapi)](https://manoj m25-finsight-ai.hf.space/docs)
+[![API Docs](https://img.shields.io/badge/API%20Docs-FastAPI-009688?style=for-the-badge&logo=fastapi)]
 [![GitHub](https://img.shields.io/badge/Source-GitHub-181717?style=for-the-badge&logo=github)](https://github.com/ManojMareedu/finsight-ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
@@ -23,7 +23,6 @@ FinSight AI is a production-grade multi-agent system that autonomously researche
 
 **UI:** https://huggingface.co/spaces/ManojM25/finsight-ai
 
-**API Docs:** https://manojm25-finsight-ai.hf.space/docs
 
 ---
 
