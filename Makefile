@@ -11,7 +11,7 @@ test:
 	pytest tests/ -v
 
 lint:
-	ruff check src/ && black --check src/ && mypy src/
+	ruff check src tests && black --check src tests && mypy src
 
 eval:
 	python -m src.evaluation.ragas_eval

@@ -1,4 +1,3 @@
-
 import logging
 
 from src.graph.state import DueDiligenceState
@@ -68,8 +67,7 @@ def synthesis_agent(state: DueDiligenceState) -> dict:
     risks = state.get("identified_risks", [])
 
     risk_lines = [
-        f"- [{r.get('severity', 'MEDIUM')}] {r.get('category', '')}: "
-        f"{r.get('description', '')}"
+        f"- [{r.get('severity', 'MEDIUM')}] {r.get('category', '')}: " f"{r.get('description', '')}"
         for r in risks
     ]
     risk_summary = "\n".join(risk_lines) if risk_lines else "No risks identified."

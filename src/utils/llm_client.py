@@ -1,4 +1,3 @@
-
 import json
 import logging
 from functools import lru_cache
@@ -66,6 +65,7 @@ def chat(messages: list, model: Optional[str] = None) -> str:
     trace = None
     try:
         from src.observability.tracer import get_tracer
+
         tracer = get_tracer()
         trace = tracer.trace(
             name="llm_chat",
@@ -107,8 +107,7 @@ def structured_chat(messages: list, schema, model: Optional[str] = None):
     # Copy messages and append schema instruction to the last message
     augmented = [dict(m) for m in messages]
     augmented[-1]["content"] = (
-        augmented[-1]["content"]
-        + f"\n\nReturn ONLY valid JSON matching this schema. "
+        augmented[-1]["content"] + f"\n\nReturn ONLY valid JSON matching this schema. "
         f"No markdown. No explanation. JSON only.\n\n{schema_json}"
     )
 

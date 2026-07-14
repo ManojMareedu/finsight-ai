@@ -1,4 +1,3 @@
-
 import base64
 import logging
 import time
@@ -31,20 +30,22 @@ def analyze(request: AnalyzeRequest):
     logger.info(f"Starting analysis for: {company}")
 
     try:
-        result = workflow.invoke({
-            "company_name": company,
-            "company_ticker": request.company_ticker or "",
-            "iterations": 0,
-            "research_complete": False,
-            "error_messages": [],
-            "web_search_results": [],
-            "news_articles": [],
-            "filing_chunks": [],
-            "retrieved_context": [],
-            "identified_risks": [],
-            "risk_score": 0.0,
-            "final_report": None,
-        })
+        result = workflow.invoke(
+            {
+                "company_name": company,
+                "company_ticker": request.company_ticker or "",
+                "iterations": 0,
+                "research_complete": False,
+                "error_messages": [],
+                "web_search_results": [],
+                "news_articles": [],
+                "filing_chunks": [],
+                "retrieved_context": [],
+                "identified_risks": [],
+                "risk_score": 0.0,
+                "final_report": None,
+            }
+        )
     except Exception as e:
         logger.error(f"Workflow failed for {company}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Workflow error: {str(e)}")
@@ -55,7 +56,7 @@ def analyze(request: AnalyzeRequest):
         raise HTTPException(
             status_code=500,
             detail="Workflow completed but no report was generated. "
-                   "Check that your OPENROUTER_API_KEY is set and the model name is valid."
+            "Check that your OPENROUTER_API_KEY is set and the model name is valid.",
         )
 
     # Generate PDF only if requested
@@ -63,6 +64,7 @@ def analyze(request: AnalyzeRequest):
     if request.include_pdf:
         try:
             from src.models.schemas import DueDiligenceReport
+
             report_obj = DueDiligenceReport(**report)
             pdf_bytes = generate_pdf(report_obj)
             pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")

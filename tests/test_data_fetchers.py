@@ -15,6 +15,7 @@ from src.utils.data_fetchers import (
 
 # --- resolve_ticker -----------------------------------------------------------
 
+
 def test_resolve_ticker_prefers_provided():
     assert resolve_ticker("Apple", "aapl") == "AAPL"
 
@@ -35,6 +36,7 @@ def test_resolve_ticker_fallback_strips_non_alpha():
 
 # --- _fmt_large / _parse_fmt_large -------------------------------------------
 
+
 def test_fmt_large_scales():
     assert _fmt_large(1_500_000_000_000) == "$1.50T"
     assert _fmt_large(2_500_000_000) == "$2.50B"
@@ -52,6 +54,7 @@ def test_parse_fmt_large_bad_input_returns_none():
 
 
 # --- _latest_annual -----------------------------------------------------------
+
 
 def _usd_entry(val, start, end, filed, form="10-K"):
     return {"val": val, "start": start, "end": end, "filed": filed, "form": form}
@@ -80,9 +83,7 @@ def test_latest_annual_handles_concept_switch():
         "RevenueFromContractWithCustomerExcludingAssessedTax": {
             "units": {"USD": [_usd_entry(100, "2021-01-01", "2021-12-31", "2022-02-01")]}
         },
-        "Revenues": {
-            "units": {"USD": [_usd_entry(150, "2022-01-01", "2022-12-31", "2023-02-01")]}
-        },
+        "Revenues": {"units": {"USD": [_usd_entry(150, "2022-01-01", "2022-12-31", "2023-02-01")]}},
     }
     concepts = ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"]
     assert _latest_annual(us_gaap, concepts) == 150.0
@@ -93,6 +94,7 @@ def test_latest_annual_none_when_no_annual_data():
 
 
 # --- _revenue_growth ----------------------------------------------------------
+
 
 def test_revenue_growth_computes_yoy():
     us_gaap = {
@@ -112,14 +114,13 @@ def test_revenue_growth_computes_yoy():
 
 def test_revenue_growth_none_with_single_year():
     us_gaap = {
-        "Revenues": {
-            "units": {"USD": [_usd_entry(100, "2022-01-01", "2022-12-31", "2023-02-01")]}
-        }
+        "Revenues": {"units": {"USD": [_usd_entry(100, "2022-01-01", "2022-12-31", "2023-02-01")]}}
     }
     assert _revenue_growth(us_gaap, ["Revenues"]) is None
 
 
 # --- get_financials_from_edgar sanity checks (HTTP mocked) --------------------
+
 
 class _FakeResp:
     def __init__(self, payload):

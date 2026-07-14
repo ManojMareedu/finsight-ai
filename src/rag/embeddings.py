@@ -15,11 +15,7 @@ class LocalEmbeddings(Embeddings):
         self.model = SentenceTransformer(model_name)
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        embeddings = self.model.encode(
-            texts,
-            batch_size=32,
-            show_progress_bar=False
-        )
+        embeddings = self.model.encode(texts, batch_size=32, show_progress_bar=False)
         return embeddings.tolist()
 
     def embed_query(self, text: str) -> List[float]:
