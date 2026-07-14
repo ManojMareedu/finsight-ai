@@ -9,11 +9,17 @@ python-dotenv==1.0.1
 
 # AI / LangChain stack
 langchain==0.3.7
+# Pin langchain-core: it is not constrained by the meta-packages' loose bounds,
+# and an unpinned install drifts to 1.x, which breaks langchain-openai 0.2.9 and
+# ragas 0.2.6 (ChatOpenAI stops forwarding api_key; RAGAS returns NaN).
+langchain-core>=0.3.15,<0.4
 langgraph==0.2.45
 langchain-community==0.3.7
 langchain-openai==0.2.9
 openai==1.54.0
 langchain-chroma==0.1.4
+# Pin the ollama integration too: 1.x requires langchain-core 1.x and would
+# re-introduce the drift above.
 langchain-ollama==0.2.3
 ollama
 
