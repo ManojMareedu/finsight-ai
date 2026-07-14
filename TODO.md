@@ -7,7 +7,9 @@ follow-ups you discover as new items.
 Legend: **P0** = broken / blocking · **P1** = correctness, debt, must-do-soon ·
 **P2** = hygiene, enhancements, roadmap.
 
-Last reviewed: **2026-07-14** (see WORKLOG entries 2026-07-14).
+Last reviewed: **2026-07-14** (see WORKLOG entries 2026-07-14). **Status:** all P0
++ P1 resolved and verified; P2-1/2/4(partial) done. Remaining: P2-3 (deferred —
+architecture decision), P2-4 remainder, P2-5 (roadmap features), P1-5b.
 
 ---
 

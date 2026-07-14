@@ -63,9 +63,10 @@ longer exists). Trust the source and this file over the README.
 ## 3. Commands
 
 ```bash
-# Environment (recreate if venv is broken — see TODO P1)
-python3.11 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+# Environment. The committed .venv is Python 3.12 and works for all gates via
+# `python -m` (its mypy/black console-script shebangs are stale — invoke through
+# python -m, as below). python3.11 is not installed here; recreation is optional.
+pip install -r requirements.txt   # into .venv
 export PYTHONPATH=$(pwd)
 
 # Run
@@ -127,13 +128,20 @@ A change is **Done** only when all of the following hold:
 
 ## 6. Known landmines (see TODO.md for full backlog)
 
-- `src/rag/retriever.py` hardcodes `./data/chroma`, ignoring `CHROMA_PERSIST_DIR`
-  → retrieval silently returns nothing in Docker/HF where the dir is `/data/chroma`.
-- `Dockerfile` HEALTHCHECK probes `/api/v1/health`; the real route is `/health`.
-- CI currently fails on `ruff check src` (6 errors in `ragas_eval.py`).
-- Local `.venv` console scripts (mypy/black) are broken — the venv was built at a
-  path containing a space and the shebangs point to a non-existent interpreter.
-- Test coverage is effectively zero (`tests/test_smoke.py` asserts `True`).
+Resolved 2026-07-14 (kept here as history — all verified fixed):
+- ~~`retriever.py` hardcoded `./data/chroma`~~ → now reads `CHROMA_PERSIST_DIR`.
+- ~~`Dockerfile` HEALTHCHECK probed `/api/v1/health`~~ → now `/health`.
+- ~~CI red on `ruff`~~ → clean; CI also runs `black --check` + `mypy` + tests.
+- ~~Test coverage ≈ zero~~ → 33 network-free tests.
+
+Still live:
+- `.venv` mypy/black console-script shebangs are stale (built at an old
+  space-containing path). Harmless: invoke via `.venv/bin/python -m <tool>`.
+- The two ChromaDB access patterns are not yet unified (TODO P2-3, deferred).
+- RAGAS eval is manual/local, not wired into GH push CI (TODO P1-5b).
+- `get_company_cik` is cached per-process via `_get_edgar_tickers` — if a
+  long-running server must pick up daily SEC ticker updates, restart it (or add
+  TTL). Reference data changes slowly, so this is acceptable today.
 
 ## 7. Conventions for agents
 
