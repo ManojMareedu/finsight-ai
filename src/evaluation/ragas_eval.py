@@ -63,29 +63,33 @@ def collect_eval_data(golden: list) -> list:
                 logger.warning(f"No context retrieved for: {item['question']}")
                 continue
 
-            answer = chat([
-                {
-                    "role": "system",
-                    "content": (
-                        "Answer the question based only on the provided context. "
-                        "Be concise and factual."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        f"Context:\n{chr(10).join(contexts[:3])}\n\n"
-                        f"Question: {item['question']}"
-                    ),
-                },
-            ])
+            answer = chat(
+                [
+                    {
+                        "role": "system",
+                        "content": (
+                            "Answer the question based only on the provided context. "
+                            "Be concise and factual."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Context:\n{chr(10).join(contexts[:3])}\n\n"
+                            f"Question: {item['question']}"
+                        ),
+                    },
+                ]
+            )
 
-            eval_data.append({
-                "question":     item["question"],
-                "answer":       answer,
-                "contexts":     contexts,
-                "ground_truth": item["ground_truth"],
-            })
+            eval_data.append(
+                {
+                    "question": item["question"],
+                    "answer": answer,
+                    "contexts": contexts,
+                    "ground_truth": item["ground_truth"],
+                }
+            )
 
         except Exception as e:
             logger.warning(f"Eval item failed: {e}")
@@ -94,9 +98,7 @@ def collect_eval_data(golden: list) -> list:
 
 
 def run_evaluation() -> dict:
-    golden_path = os.path.join(
-        os.path.dirname(__file__), "golden_dataset.json"
-    )
+    golden_path = os.path.join(os.path.dirname(__file__), "golden_dataset.json")
     with open(golden_path) as f:
         golden = json.load(f)
 
@@ -106,8 +108,7 @@ def run_evaluation() -> dict:
 
     if not eval_data:
         raise RuntimeError(
-            "No evaluation data collected. "
-            "Make sure ChromaDB has filings ingested."
+            "No evaluation data collected. " "Make sure ChromaDB has filings ingested."
         )
 
     logger.info(f"Running RAGAS evaluation on {len(eval_data)} samples...")
@@ -143,12 +144,12 @@ def run_evaluation() -> dict:
         return round(float(val), 4)
 
     result = {
-        "faithfulness":      safe_score("faithfulness"),
-        "answer_relevancy":  safe_score("answer_relevancy"),
+        "faithfulness": safe_score("faithfulness"),
+        "answer_relevancy": safe_score("answer_relevancy"),
         "context_precision": safe_score("context_precision"),
-        "context_recall":    safe_score("context_recall"),
-        "num_samples":       len(eval_data),
-        "timestamp":         datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "context_recall": safe_score("context_recall"),
+        "num_samples": len(eval_data),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
 
     # Quality gate: run passes only if the two primary metrics clear their

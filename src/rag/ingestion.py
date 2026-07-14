@@ -45,12 +45,14 @@ def ingest_company_filing(company_name: str, ticker: str, chroma_dir: str) -> in
     # Split into chunks
     chunks = splitter.create_documents(
         texts=[raw_text],
-        metadatas=[{
-            "company": company_name,
-            "ticker": ticker,
-            "source": "SEC_10K",
-            "cik": cik,
-        }]
+        metadatas=[
+            {
+                "company": company_name,
+                "ticker": ticker,
+                "source": "SEC_10K",
+                "cik": cik,
+            }
+        ],
     )
 
     logger.info(f"Created {len(chunks)} chunks")

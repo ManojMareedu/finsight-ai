@@ -1,4 +1,3 @@
-
 import logging
 import re
 from typing import Optional
@@ -8,9 +7,7 @@ from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
-EDGAR_HEADERS = {
-    "User-Agent": "FinSightAI manoj.mareedu.pro@gmail.com"
-}
+EDGAR_HEADERS = {"User-Agent": "FinSightAI manoj.mareedu.pro@gmail.com"}
 
 # Fallback map for common companies where name-to-ticker is ambiguous
 KNOWN_TICKERS: dict[str, str] = {
@@ -156,8 +153,7 @@ def get_latest_10k_text(cik: str, max_chars: int = 50000) -> str:
 
         acc_no_dash = accnum.replace("-", "")
         filing_url = (
-            f"https://www.sec.gov/Archives/edgar/data/"
-            f"{int(cik)}/{acc_no_dash}/{primary_doc}"
+            f"https://www.sec.gov/Archives/edgar/data/" f"{int(cik)}/{acc_no_dash}/{primary_doc}"
         )
 
         try:
@@ -191,6 +187,7 @@ def get_stock_info(ticker: str) -> dict:
         return {}
     return get_financials_from_edgar(cik)
 
+
 def get_financials_from_edgar(cik: str) -> dict:
     """
     Pull key financial metrics from SEC EDGAR XBRL company facts.
@@ -212,24 +209,29 @@ def get_financials_from_edgar(cik: str) -> dict:
     result = {}
 
     # Each helper pulls the most recent annual (10-K) value for a GAAP concept
-    revenue = _latest_annual(us_gaap, [
-        "RevenueFromContractWithCustomerExcludingAssessedTax",
-        "Revenues",
-        "SalesRevenueNet",
-    ])
+    revenue = _latest_annual(
+        us_gaap,
+        [
+            "RevenueFromContractWithCustomerExcludingAssessedTax",
+            "Revenues",
+            "SalesRevenueNet",
+        ],
+    )
 
     if revenue:
         result["revenue"] = _fmt_large(revenue)
 
-    revenue_growth = _revenue_growth(us_gaap, [
-    "RevenueFromContractWithCustomerExcludingAssessedTax",
-    "Revenues",
-    "SalesRevenueNet",
-    ])
+    revenue_growth = _revenue_growth(
+        us_gaap,
+        [
+            "RevenueFromContractWithCustomerExcludingAssessedTax",
+            "Revenues",
+            "SalesRevenueNet",
+        ],
+    )
 
     if revenue_growth is not None:
         result["revenue_growth_yoy"] = f"{revenue_growth:.1f}%"
-
 
     net_income = _latest_annual(us_gaap, ["NetIncomeLoss"])
     if net_income:
@@ -248,12 +250,15 @@ def get_financials_from_edgar(cik: str) -> dict:
             logger.warning(
                 f"Gross margin {margin:.1f}% < 2% for CIK {cik} — "
                 f"likely incomplete GAAP GrossProfit, dropping"
-    )
+            )
 
-    eps = _latest_annual(us_gaap, [
-        "EarningsPerShareBasic",
-        "EarningsPerShareDiluted",
-    ])
+    eps = _latest_annual(
+        us_gaap,
+        [
+            "EarningsPerShareBasic",
+            "EarningsPerShareDiluted",
+        ],
+    )
     if eps:
         result["eps"] = f"${eps:.2f}"
 
@@ -319,10 +324,7 @@ def _latest_annual(us_gaap: dict, concept_names: list) -> Optional[float]:
         units = data.get("units", {})
         values = units.get("USD") or units.get("USD/shares") or []
 
-        annual = [
-            v for v in values
-            if v.get("form") == "10-K" and v.get("val") is not None
-        ]
+        annual = [v for v in values if v.get("form") == "10-K" and v.get("val") is not None]
         if not annual:
             continue
 
@@ -343,10 +345,7 @@ def _latest_annual(us_gaap: dict, concept_names: list) -> Optional[float]:
             if not start or not end:
                 continue
             try:
-                days = (
-                    datetime.date.fromisoformat(end) -
-                    datetime.date.fromisoformat(start)
-                ).days
+                days = (datetime.date.fromisoformat(end) - datetime.date.fromisoformat(start)).days
                 if days < 300:
                     continue
             except Exception:
@@ -372,6 +371,7 @@ def _fmt_large(value: float) -> str:
         return f"${value / 1_000_000:.2f}M"
     return f"${value:,.0f}"
 
+
 def _parse_fmt_large(value_str: str) -> Optional[float]:
     """Parse a _fmt_large formatted string back to float for sanity checks."""
     try:
@@ -386,6 +386,7 @@ def _parse_fmt_large(value_str: str) -> Optional[float]:
     except Exception:
         return None
 
+
 def _revenue_growth(us_gaap: dict, concept_names: list) -> Optional[float]:
     """
     Calculate YoY revenue growth using the two most recent full-year values
@@ -399,10 +400,7 @@ def _revenue_growth(us_gaap: dict, concept_names: list) -> Optional[float]:
         data = us_gaap.get(concept, {})
         values = data.get("units", {}).get("USD", [])
 
-        annual = [
-            v for v in values
-            if v.get("form") == "10-K" and v.get("val") is not None
-        ]
+        annual = [v for v in values if v.get("form") == "10-K" and v.get("val") is not None]
         if not annual:
             continue
 
@@ -423,10 +421,7 @@ def _revenue_growth(us_gaap: dict, concept_names: list) -> Optional[float]:
             if not start or not end:
                 continue
             try:
-                days = (
-                    datetime.date.fromisoformat(end) -
-                    datetime.date.fromisoformat(start)
-                ).days
+                days = (datetime.date.fromisoformat(end) - datetime.date.fromisoformat(start)).days
                 if days >= 300:
                     all_full_year.append(entry)
             except Exception:
@@ -443,11 +438,7 @@ def _revenue_growth(us_gaap: dict, concept_names: list) -> Optional[float]:
         if end not in by_period_final or filed > by_period_final[end].get("filed", ""):
             by_period_final[end] = entry
 
-    sorted_entries = sorted(
-        by_period_final.values(),
-        key=lambda x: x.get("end", ""),
-        reverse=True
-    )
+    sorted_entries = sorted(by_period_final.values(), key=lambda x: x.get("end", ""), reverse=True)
 
     if len(sorted_entries) < 2:
         return None
@@ -458,6 +449,7 @@ def _revenue_growth(us_gaap: dict, concept_names: list) -> Optional[float]:
         return None
     return ((current - previous) / previous) * 100
 
+
 def get_latest_10k_date(cik: str) -> Optional[str]:
     """
     Returns the filing date of the most recent 10-K for a company.
@@ -467,10 +459,7 @@ def get_latest_10k_date(cik: str) -> Optional[str]:
     try:
         data = requests.get(url, headers=EDGAR_HEADERS, timeout=15).json()
         filings = data.get("filings", {}).get("recent", {})
-        for form, date in zip(
-            filings.get("form", []),
-            filings.get("filingDate", [])
-        ):
+        for form, date in zip(filings.get("form", []), filings.get("filingDate", [])):
             if form == "10-K":
                 return date  # e.g. "2024-07-30"
     except Exception as e:

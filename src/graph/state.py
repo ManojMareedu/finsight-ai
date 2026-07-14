@@ -24,5 +24,5 @@ class DueDiligenceState(TypedDict):
 
     # Control flow
     research_complete: bool
-    iterations: Annotated[int, add]   # reducer → increments
+    iterations: Annotated[int, add]  # reducer → increments
     error_messages: List[str]

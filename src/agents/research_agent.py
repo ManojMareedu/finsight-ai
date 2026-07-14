@@ -1,4 +1,3 @@
-
 import logging
 
 from src.graph.state import DueDiligenceState
@@ -29,10 +28,12 @@ def research_agent(state: DueDiligenceState) -> dict:
     # --- Tavily web search (optional) ---
     try:
         from src.utils.config import get_settings
+
         settings = get_settings()
 
         if settings.tavily_api_key and settings.tavily_api_key != "your_tavily_api_key_here":
             from tavily import TavilyClient
+
             client = TavilyClient(api_key=settings.tavily_api_key)
 
             queries = [
@@ -54,11 +55,13 @@ def research_agent(state: DueDiligenceState) -> dict:
                         web_results.append(answer)
 
                     for r in resp.get("results", []):
-                        news_articles.append({
-                            "title": r.get("title", ""),
-                            "url": r.get("url", ""),
-                            "snippet": r.get("content", "")[:500],
-                        })
+                        news_articles.append(
+                            {
+                                "title": r.get("title", ""),
+                                "url": r.get("url", ""),
+                                "snippet": r.get("content", "")[:500],
+                            }
+                        )
                 except Exception as e:
                     logger.warning(f"Tavily search failed for '{query}': {e}")
         else:
@@ -70,9 +73,8 @@ def research_agent(state: DueDiligenceState) -> dict:
     # --- EDGAR financial metrics (always runs, no API key needed) ---
     stock_data = get_stock_info(ticker)
     if stock_data:
-        stock_summary = (
-            f"{company} stock data: "
-            + ", ".join(f"{k}={v}" for k, v in stock_data.items() if v != "N/A")
+        stock_summary = f"{company} stock data: " + ", ".join(
+            f"{k}={v}" for k, v in stock_data.items() if v != "N/A"
         )
         web_results.append(stock_summary)
         logger.info(f"Stock data fetched for {ticker}: {stock_data}")

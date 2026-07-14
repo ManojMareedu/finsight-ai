@@ -119,6 +119,7 @@ def render_report(report: dict) -> None:
 
 # ── Main App ──────────────────────────────────────────────────────────────────
 
+
 def main() -> None:
     # Header
     col1, col2 = st.columns([3, 1])
@@ -184,10 +185,7 @@ def main() -> None:
             return
         except Exception as e:
             status.update(label=f"Connection error: {e}", state="error")
-            st.error(
-                f"Could not reach the backend at `{API_URL}/analyze`.\n\n"
-                f"Error: {e}"
-            )
+            st.error(f"Could not reach the backend at `{API_URL}/analyze`.\n\n" f"Error: {e}")
             return
 
         elapsed = round(time.time() - start, 1)
@@ -223,7 +221,7 @@ def main() -> None:
         pdf_b64 = data.get("pdf_base64")
         if include_pdf and pdf_b64:
             pdf_bytes = base64.b64decode(pdf_b64)
-            fname=f"finsight_{company.strip().replace(' ', '_')}_{datetime.now():%Y%m%d}.pdf"
+            fname = f"finsight_{company.strip().replace(' ', '_')}_{datetime.now():%Y%m%d}.pdf"
             st.download_button(
                 label="⬇️ Download PDF Report",
                 data=pdf_bytes,

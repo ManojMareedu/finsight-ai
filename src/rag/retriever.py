@@ -41,10 +41,7 @@ def get_retriever(company_filter: Optional[str] = None):
     )
 
 
-def retrieve_context(
-    query: str,
-    company: Optional[str] = None
-) -> List[Document]:
+def retrieve_context(query: str, company: Optional[str] = None) -> List[Document]:
 
     retriever = get_retriever(company_filter=company)
     return retriever.invoke(query)

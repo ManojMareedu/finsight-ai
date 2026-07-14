@@ -5,6 +5,14 @@ data/
 .vscode/
 .idea/
 
+# Generated report artifacts (the app returns PDFs via API/UI, not to the repo)
+*.pdf
+
+# Tool caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
 # macOS Finder metadata
 .DS_Store
 src/.DS_Store

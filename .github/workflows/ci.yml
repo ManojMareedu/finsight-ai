@@ -24,7 +24,8 @@ jobs:
 
       - name: Lint
         run: |
-          ruff check src
+          ruff check src tests
+          black --check src tests
 
       - name: Type check
         run: |
