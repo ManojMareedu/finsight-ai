@@ -6,6 +6,27 @@ CLAUDE.md (the standing rules).
 
 ---
 
+## 2026-07-14 — P1-5: de-hardwire RAGAS judge + make eval a real gate
+
+**Author:** Claude (Opus 4.8), autonomous execution loop.
+
+- Root cause: `ragas_eval.py` hardwired `ChatOllama("llama3.2")` and printed
+  PASS/FAIL but always exited 0 — it could neither run without a specific local
+  daemon nor actually gate anything.
+- Change: added `_build_judge_llm(settings)` selecting the judge via
+  `RAGAS_JUDGE_PROVIDER` (`ollama` default / `openrouter`; both free — no paid
+  dep). Thresholds now live in settings; `run_evaluation()` returns a `passed`
+  bool and the CLI `sys.exit(0/1)` on it, so `make eval` is a genuine quality gate.
+- Config: new `ragas_*` settings; `.env.example` documents the provider toggle;
+  README roadmap updated to reflect the gated-but-manual reality.
+- mypy flagged `api_key` needing `SecretStr` on the OpenRouter path — fixed.
+  Verified both judge backends construct offline; `ruff`/`mypy`/`pytest` green.
+- **Deliberately not wired into GH push CI** (no Ollama there; live-LLM scoring is
+  flaky). Remaining CI-wiring + a self-contained fixture corpus split into new
+  **P1-5b**.
+
+---
+
 ## 2026-07-14 — P1-3/4/6/7/8: schema de-dup, config/doc accuracy, LICENSE, compose
 
 **Author:** Claude (Opus 4.8), autonomous execution loop.

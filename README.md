@@ -327,7 +327,10 @@ HuggingFace Spaces runs the container permanently on free CPU hardware with no s
 
 ## Roadmap
 
-- [ ] RAGAS evaluation pipeline with automated CI quality gates
+- [x] RAGAS evaluation pipeline with a pass/fail threshold gate (`make eval`,
+  configurable judge backend: local Ollama or OpenRouter). Runs manually/locally;
+  wiring it into GitHub Actions is deferred (CI has no Ollama and live-LLM scoring
+  is flaky) — [ ] automated GH CI gating still to do.
 - [ ] Streaming responses so the UI updates in real time as each agent completes
 - [ ] Multi-company comparison mode (portfolio-level analysis)
 - [ ] Support for international filings (BSE India, LSE, TSX)

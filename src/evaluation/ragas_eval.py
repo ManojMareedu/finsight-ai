@@ -14,10 +14,41 @@ from ragas.metrics import (
 )
 
 from src.rag.retriever import retrieve_context
+from src.utils.config import Settings, get_settings
 from src.utils.llm_client import chat
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def _build_judge_llm(settings: Settings):
+    """
+    Build the RAGAS judge LLM from settings.
+
+    Both backends are free: "ollama" runs a local model, "openrouter" reuses the
+    configured free OpenRouter model. Neither is a paid dependency.
+    """
+    provider = settings.ragas_judge_provider.lower()
+
+    if provider == "openrouter":
+        from langchain_openai import ChatOpenAI
+        from pydantic import SecretStr
+
+        return ChatOpenAI(
+            model=settings.primary_model,
+            base_url=settings.openrouter_base_url,
+            api_key=SecretStr(settings.openrouter_api_key),
+            temperature=0,
+        )
+
+    # Default: local Ollama
+    from langchain_ollama import ChatOllama
+
+    return ChatOllama(
+        model=settings.ragas_ollama_model,
+        temperature=0,
+        num_predict=512,
+    )
 
 
 def collect_eval_data(golden: list) -> list:
@@ -81,16 +112,12 @@ def run_evaluation() -> dict:
 
     logger.info(f"Running RAGAS evaluation on {len(eval_data)} samples...")
 
-    from langchain_ollama import ChatOllama
     from ragas.embeddings import LangchainEmbeddingsWrapper
 
     from src.rag.embeddings import get_embeddings
 
-    ragas_llm = ChatOllama(
-        model="llama3.2",
-        temperature=0,
-        num_predict=512,
-    )
+    settings = get_settings()
+    ragas_llm = _build_judge_llm(settings)
 
     ragas_embeddings = LangchainEmbeddingsWrapper(get_embeddings())
 
@@ -124,6 +151,13 @@ def run_evaluation() -> dict:
         "timestamp":         datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
 
+    # Quality gate: run passes only if the two primary metrics clear their
+    # thresholds. Exposed so `make eval` / a manual CI step can fail on it.
+    result["passed"] = bool(
+        result["faithfulness"] >= settings.ragas_faithfulness_min
+        and result["answer_relevancy"] >= settings.ragas_answer_relevancy_min
+    )
+
     os.makedirs("evaluation/results", exist_ok=True)
     with open("evaluation/results/latest.json", "w") as f:
         json.dump(result, f, indent=2)
@@ -132,20 +166,27 @@ def run_evaluation() -> dict:
 
 
 if __name__ == "__main__":
+    import sys
+
+    settings = get_settings()
     results = run_evaluation()
+
+    mins = {
+        "faithfulness": settings.ragas_faithfulness_min,
+        "answer_relevancy": settings.ragas_answer_relevancy_min,
+    }
 
     print("\n" + "=" * 40)
     print("  RAGAS Evaluation Results")
     print("=" * 40)
     for k, v in results.items():
         if isinstance(v, float):
-            status = "PASS" if (
-                (k == "faithfulness"     and v >= 0.70) or
-                (k == "answer_relevancy" and v >= 0.65) or
-                k not in ("faithfulness", "answer_relevancy")
-            ) else "FAIL"
+            status = "PASS" if v >= mins.get(k, 0.0) else "FAIL"
             print(f"  {k:<22} {v:.4f}   [{status}]")
         else:
             print(f"  {k:<22} {v}")
     print("=" * 40)
     print("\nResults saved to evaluation/results/latest.json")
+
+    # Non-zero exit turns this into a real quality gate for `make eval`.
+    sys.exit(0 if results["passed"] else 1)

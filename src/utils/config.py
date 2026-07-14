@@ -34,6 +34,15 @@ class Settings(BaseSettings):
     max_agent_iterations: int = 3
     risk_threshold: float = 0.7
 
+    # Evaluation (RAGAS). Judge backend is configurable so eval isn't hardwired to
+    # a local Ollama daemon: "ollama" (default, local) or "openrouter" (reuses the
+    # free OpenRouter model). Eval runs manually/locally, not in GH CI — CI has no
+    # Ollama and live-LLM eval is flaky. Thresholds gate a run's pass/fail.
+    ragas_judge_provider: str = "ollama"
+    ragas_ollama_model: str = "llama3.2"
+    ragas_faithfulness_min: float = 0.70
+    ragas_answer_relevancy_min: float = 0.65
+
 
 @lru_cache
 def get_settings() -> Settings:
