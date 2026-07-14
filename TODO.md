@@ -65,12 +65,22 @@ Last reviewed: **2026-07-14** (see WORKLOG entries 2026-07-14).
   still has `PRIMARY_MODEL=openrouter/free`; update it to the free slug above if
   `openrouter/free` isn't valid on your OpenRouter account.
 
-- [ ] **P1-5 · RAGAS eval is not CI-gatable.** `ragas_eval.py` hardwires
-  `ChatOllama(model="llama3.2")`, requiring a local Ollama daemon + a pre-populated
-  ChromaDB — it cannot run in CI, yet the README roadmap promises "automated CI
-  quality gates". Decide the judge backend (OpenRouter LLM vs Ollama), make it
-  configurable, seed a tiny fixture corpus, and wire a threshold check. Until then,
-  document it as manual-only.
+- [x] **P1-5 · RAGAS eval judge de-hardwired + gated.** **DONE 2026-07-14
+  (partial; CI wiring split to P1-5b).** The judge LLM is no longer hardwired to
+  `ChatOllama("llama3.2")`: `_build_judge_llm(settings)` selects
+  `RAGAS_JUDGE_PROVIDER` = `ollama` (default, local) or `openrouter` (reuses the
+  free model) — both free. Thresholds moved to settings
+  (`ragas_faithfulness_min`/`ragas_answer_relevancy_min`); `run_evaluation` returns
+  a `passed` bool and the CLI exits non-zero on failure, so `make eval` is a real
+  gate. Documented as manual/local (README roadmap + config comments). mypy/ruff
+  clean; both backends verified to construct offline.
+
+- [ ] **P1-5b · Wire eval into an automated gate + self-contained fixture.**
+  Deferred from P1-5. `collect_eval_data` still requires a pre-populated ChromaDB
+  (calls `retrieve_context`). To make eval runnable from a clean checkout, seed a
+  tiny fixture corpus into a temp Chroma so it doesn't depend on prior ingestion,
+  then decide whether/how to gate it (a scheduled job or an opt-in CI job with an
+  `OPENROUTER_API_KEY` secret — not the default push CI, to avoid flakiness).
 
 - [x] **P1-6 · Stale/incorrect docstring in `research_agent.py`.** **DONE
   2026-07-14:** docstring + inline comment now say "financial metrics from SEC
