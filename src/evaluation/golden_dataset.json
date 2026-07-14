@@ -1,0 +1,52 @@
+[
+  {
+    "question": "What were Apple total revenues in fiscal year 2023?",
+    "ground_truth": "Apple reported total net sales of $383.3 billion for fiscal 2023.",
+    "context_source": "apple_10k_2023"
+  },
+  {
+    "question": "What is the primary risk factor cited in Tesla 10-K?",
+    "ground_truth": "Tesla cites competition, manufacturing scaling, and supply chain as key risks in their 10-K filings.",
+    "context_source": "tesla_10k_2023"
+  },
+  {
+    "question": "What segment generates the most revenue for Apple?",
+    "ground_truth": "iPhone revenue is Apple's largest segment, generating approximately $200 billion in fiscal 2023.",
+    "context_source": "apple_10k_2023"
+  },
+  {
+    "question": "How does Microsoft describe its cloud business performance?",
+    "ground_truth": "Microsoft Azure and cloud services showed significant growth, with commercial cloud revenue reaching $111.6 billion in fiscal 2023.",
+    "context_source": "msft_10k_2023"
+  },
+  {
+    "question": "What risks does Tesla identify related to vehicle deliveries?",
+    "ground_truth": "Tesla cites production ramp, logistics complexity, and customer delivery experience as risks affecting delivery volumes.",
+    "context_source": "tesla_10k_2023"
+  },
+  {
+    "question": "What is Apple's gross margin percentage for fiscal 2023?",
+    "ground_truth": "Apple reported a gross margin of approximately 44.1% for fiscal year 2023.",
+    "context_source": "apple_10k_2023"
+  },
+  {
+    "question": "What are the main products Apple sells?",
+    "ground_truth": "Apple sells iPhone, Mac, iPad, wearables, and services including the App Store and Apple Music.",
+    "context_source": "apple_10k_2023"
+  },
+  {
+    "question": "How does Tesla describe its manufacturing strategy?",
+    "ground_truth": "Tesla operates Gigafactories and focuses on vertically integrated manufacturing to reduce costs and scale production.",
+    "context_source": "tesla_10k_2023"
+  },
+  {
+    "question": "What is Microsoft's primary source of revenue?",
+    "ground_truth": "Microsoft's primary revenue comes from its Intelligent Cloud segment, including Azure cloud services and server products.",
+    "context_source": "msft_10k_2023"
+  },
+  {
+    "question": "What competitive risks does Apple identify in its 10-K?",
+    "ground_truth": "Apple cites intense competition in all product categories, rapid technological change, and pricing pressure as key competitive risks.",
+    "context_source": "apple_10k_2023"
+  }
+]
