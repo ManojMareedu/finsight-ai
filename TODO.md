@@ -41,13 +41,15 @@ Last reviewed: **2026-07-14** (see WORKLOG entries 2026-07-14).
   already prescribes the `python -m` invocation. mypy targets 3.11 semantics via
   config regardless of the 3.12 interpreter.
 
-- [ ] **P1-2 · Establish real test coverage.** Only `tests/test_smoke.py`
-  (`assert True`) exists. Add network-free unit tests for the highest-value pure
-  logic: `data_fetchers` (`resolve_ticker`, `_fmt_large`/`_parse_fmt_large`,
-  `_latest_annual`, revenue-growth, the gross-margin/net-income sanity checks),
-  `llm_client._normalize_messages`, `risk_agent` score derivation + severity
-  normalization, and `schemas` validation (bounds on `confidence_score`, enums).
-  Mock all HTTP/LLM.
+- [x] **P1-2 · Establish real test coverage.** **DONE 2026-07-14:** added 30
+  network-free unit tests (suite now 31, was 1). `tests/test_data_fetchers.py`
+  (ticker resolution, `_fmt_large`/`_parse_fmt_large` round-trips, `_latest_annual`
+  incl. GAAP concept-switch, `_revenue_growth`, and the net-income>revenue and
+  >100% gross-margin sanity checks via mocked HTTP), `tests/test_llm_client.py`
+  (`_normalize_messages` folding + non-mutation), `tests/test_risk_agent.py`
+  (score derivation, severity normalization, fenced-JSON, fallback; LLM mocked),
+  `tests/test_schemas.py` (confidence bounds, enum + min-length validation). All
+  HTTP/LLM mocked. `ruff`/`mypy`/`pytest` green.
 
 - [ ] **P1-3 · De-duplicate request/response schemas.**
   `AnalyzeRequest`/`AnalyzeResponse` are defined in **both**
