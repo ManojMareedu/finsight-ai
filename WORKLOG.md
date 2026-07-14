@@ -6,6 +6,31 @@ CLAUDE.md (the standing rules).
 
 ---
 
+## 2026-07-14 — P1-2: establish real test coverage
+
+**Author:** Claude (Opus 4.8), autonomous execution loop.
+
+- Added 30 network-free unit tests across four files; suite went **1 → 31 passing**.
+  Everything external (HTTP to EDGAR, the LLM `chat` call) is mocked, so tests are
+  deterministic and CI-safe.
+- Coverage targets the pure logic most likely to regress, including the tricky
+  EDGAR sanity checks and the `_latest_annual` GAAP-concept-switch handling — and
+  it regression-locks the P0-2 retriever behavior indirectly by pinning the data
+  layer it feeds.
+- Fixed lint in the new tests (import order + wrapped long lines) so
+  `ruff check src tests` is clean. `mypy src` still clean.
+- Files: `tests/test_data_fetchers.py`, `tests/test_llm_client.py`,
+  `tests/test_risk_agent.py`, `tests/test_schemas.py`.
+
+### Note for CI
+CI currently runs `pytest` with no env. A module only needs `OPENROUTER_API_KEY`
+when it constructs `Settings`; the new tests avoid instantiating `Settings`, so
+they pass without secrets. (The pre-existing smoke test also needs
+none.) If future tests import the API app, they'll need a dummy key — track under
+P1-5/CI hardening.
+
+---
+
 ## 2026-07-14 — Fix P0 batch (CI red, RAG path bug, Docker healthcheck) + resolve P1-1
 
 **Author:** Claude (Opus 4.8), autonomous execution loop.
