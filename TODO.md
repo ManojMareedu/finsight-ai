@@ -51,16 +51,19 @@ Last reviewed: **2026-07-14** (see WORKLOG entries 2026-07-14).
   `tests/test_schemas.py` (confidence bounds, enum + min-length validation). All
   HTTP/LLM mocked. `ruff`/`mypy`/`pytest` green.
 
-- [ ] **P1-3 · De-duplicate request/response schemas.**
-  `AnalyzeRequest`/`AnalyzeResponse` are defined in **both**
-  `src/models/schemas.py` and `src/api/routes/analyze.py` (and diverge — the route
-  copy types `report` as `dict`, the schema copy as `DueDiligenceReport`). Delete
-  the route copies and import from `schemas.py`. (Per DoD standard #7.)
+- [x] **P1-3 · De-duplicate request/response schemas.** **DONE 2026-07-14:**
+  deleted the route-local `AnalyzeRequest`/`AnalyzeResponse` in `analyze.py`; it now
+  imports both from `src.models.schemas`. Side benefit: request validation
+  (`min_length=2`) is now enforced (verified: short name → 422) and the response
+  `report` is the typed `DueDiligenceReport` (dict output coerces cleanly).
 
-- [ ] **P1-4 · Config drift on the model name.** Default `primary_model` is
-  `"openrouter/free"` in `config.py`, `meta-llama/llama-3.3-70b-instruct:free` in
-  `.env.example`, and the README says `openrouter/auto`. Pick one, make it the
-  config default, and align `.env.example` + README.
+- [x] **P1-4 · Config drift on the model name.** **DONE 2026-07-14:** standardized
+  on `meta-llama/llama-3.3-70b-instruct:free` (a concrete free slug — keeps the
+  default $0, unlike `openrouter/auto` which can route to paid, and unlike the
+  invalid `openrouter/free`). `config.py` default + `.env.example` + README env
+  table now agree. **⚠️ Action for owner:** the local/deploy `.env` (gitignored)
+  still has `PRIMARY_MODEL=openrouter/free`; update it to the free slug above if
+  `openrouter/free` isn't valid on your OpenRouter account.
 
 - [ ] **P1-5 · RAGAS eval is not CI-gatable.** `ragas_eval.py` hardwires
   `ChatOllama(model="llama3.2")`, requiring a local Ollama daemon + a pre-populated
@@ -69,18 +72,22 @@ Last reviewed: **2026-07-14** (see WORKLOG entries 2026-07-14).
   configurable, seed a tiny fixture corpus, and wire a threshold check. Until then,
   document it as manual-only.
 
-- [ ] **P1-6 · Stale/incorrect docstring in `research_agent.py`.** The docstring
-  says it "Fetches live stock metrics via yfinance" and does "Tavily web search";
-  the code uses SEC EDGAR (`get_stock_info` → EDGAR XBRL). Correct the docstring —
-  do **not** re-introduce yfinance.
+- [x] **P1-6 · Stale/incorrect docstring in `research_agent.py`.** **DONE
+  2026-07-14:** docstring + inline comment now say "financial metrics from SEC
+  EDGAR (XBRL company facts)" instead of yfinance. yfinance was **not**
+  re-introduced.
 
-- [ ] **P1-7 · Missing LICENSE file.** README badges + text claim MIT and link to
-  `LICENSE`, which does not exist. Add the MIT license file.
+- [x] **P1-7 · Missing LICENSE file.** **DONE 2026-07-14:** added MIT `LICENSE`
+  (© 2026 Manoj Mareedu), matching the README badge/text.
 
-- [ ] **P1-8 · README structure section has drifted.** It documents
-  `docker/docker-compose.yml` (absent — only `docker/Dockerfile.ui` exists) and a
-  yfinance-based research flow. Reconcile the README with the actual tree and data
-  flow (or add the missing compose file if it's intended).
+- [x] **P1-8 · README structure section has drifted.** **DONE 2026-07-14:** the
+  README referenced a nonexistent `docker/docker-compose.yml` and a `docker-compose
+  up` Quick Start that couldn't work. Added a real root `docker-compose.yml` that
+  builds the single-container root Dockerfile (both services via `start.sh`, ports
+  7860/8000, `.env` env_file, persistent `chroma_data` volume for `/data/chroma`)
+  so the documented command works; updated the structure block to match reality
+  (`docker/Dockerfile.ui` + root `docker-compose.yml`). Validated with
+  `docker compose config`.
 
 ## P2 — Hygiene, enhancements, roadmap
 

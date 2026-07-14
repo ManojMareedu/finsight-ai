@@ -2,12 +2,11 @@
 import base64
 import logging
 import time
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 
 from src.graph.workflow import build_workflow
+from src.models.schemas import AnalyzeRequest, AnalyzeResponse
 from src.utils.pdf_generator import generate_pdf
 
 logger = logging.getLogger(__name__)
@@ -15,19 +14,6 @@ router = APIRouter()
 
 # Build once at startup - not per request
 workflow = build_workflow()
-
-
-class AnalyzeRequest(BaseModel):
-    company_name: str
-    company_ticker: Optional[str] = None
-    include_pdf: bool = False
-
-
-class AnalyzeResponse(BaseModel):
-    company: str
-    report: dict
-    pdf_base64: Optional[str] = None
-    processing_time_seconds: float
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)

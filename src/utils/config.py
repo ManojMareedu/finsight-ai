@@ -21,8 +21,9 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    # Model
-    primary_model: str = "openrouter/free"
+    # Model — a concrete free OpenRouter slug so the default stays $0 (not
+    # "openrouter/auto", which can route to paid models). Matches .env.example.
+    primary_model: str = "meta-llama/llama-3.3-70b-instruct:free"
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
     # Storage

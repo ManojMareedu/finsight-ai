@@ -1,0 +1,21 @@
+# Single-container stack: the root Dockerfile runs both FastAPI (:8000) and
+# Streamlit (:7860) via start.sh. `docker-compose up --build` brings up the
+# whole app as documented in the README Quick Start.
+services:
+  finsight:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "7860:7860"   # Streamlit UI
+      - "8000:8000"   # FastAPI + OpenAPI docs at /docs
+    env_file:
+      - .env
+    volumes:
+      # Persist ingested ChromaDB filings across restarts. Matches
+      # CHROMA_PERSIST_DIR=/data/chroma set in the Dockerfile.
+      - chroma_data:/data/chroma
+    restart: unless-stopped
+
+volumes:
+  chroma_data:
