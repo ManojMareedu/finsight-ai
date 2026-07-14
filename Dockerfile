@@ -43,6 +43,6 @@ USER appuser
 EXPOSE 7860
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s \
-    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+    CMD curl -f http://localhost:8000/health || exit 1
 
 CMD ["bash", "start.sh"]

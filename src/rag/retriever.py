@@ -8,15 +8,19 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 
 from src.rag.embeddings import get_embeddings
+from src.utils.config import get_settings
 
 
 def get_retriever(company_filter: Optional[str] = None):
     """
     ChromaDB retriever using MMR search.
+
+    Reads the persist directory from settings so retrieval and ingestion
+    always point at the same store (e.g. /data/chroma in the container).
     """
 
     vectorstore = Chroma(
-        persist_directory="./data/chroma",
+        persist_directory=get_settings().chroma_persist_dir,
         embedding_function=get_embeddings(),
         collection_name="financial_filings",
     )

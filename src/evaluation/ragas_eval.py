@@ -1,17 +1,17 @@
 # src/evaluation/ragas_eval.py
-import json
 import datetime
+import json
 import logging
 import os
 
+from datasets import Dataset
 from ragas import evaluate
 from ragas.metrics import (
-    faithfulness,
     answer_relevancy,
     context_precision,
     context_recall,
+    faithfulness,
 )
-from datasets import Dataset
 
 from src.rag.retriever import retrieve_context
 from src.utils.llm_client import chat
@@ -35,11 +35,17 @@ def collect_eval_data(golden: list) -> list:
             answer = chat([
                 {
                     "role": "system",
-                    "content": "Answer the question based only on the provided context. Be concise and factual.",
+                    "content": (
+                        "Answer the question based only on the provided context. "
+                        "Be concise and factual."
+                    ),
                 },
                 {
                     "role": "user",
-                    "content": f"Context:\n{chr(10).join(contexts[:3])}\n\nQuestion: {item['question']}",
+                    "content": (
+                        f"Context:\n{chr(10).join(contexts[:3])}\n\n"
+                        f"Question: {item['question']}"
+                    ),
                 },
             ])
 
@@ -77,6 +83,7 @@ def run_evaluation() -> dict:
 
     from langchain_ollama import ChatOllama
     from ragas.embeddings import LangchainEmbeddingsWrapper
+
     from src.rag.embeddings import get_embeddings
 
     ragas_llm = ChatOllama(
@@ -141,4 +148,4 @@ if __name__ == "__main__":
         else:
             print(f"  {k:<22} {v}")
     print("=" * 40)
-    print(f"\nResults saved to evaluation/results/latest.json")
+    print("\nResults saved to evaluation/results/latest.json")
