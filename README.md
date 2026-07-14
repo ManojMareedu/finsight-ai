@@ -113,10 +113,11 @@ finsight-ai/
 │       └── pdf_generator.py       # ReportLab PDF generation
 ├── tests/
 ├── docker/
-│   └── docker-compose.yml
+│   └── Dockerfile.ui             # UI-only image (used by CI build check)
 ├── .github/workflows/
 │   └── ci.yml
-├── Dockerfile
+├── Dockerfile                    # Single image: FastAPI + Streamlit via start.sh
+├── docker-compose.yml            # `docker-compose up --build` runs the full stack
 ├── start.sh
 ├── requirements.txt
 └── pyproject.toml
@@ -319,7 +320,7 @@ HuggingFace Spaces runs the container permanently on free CPU hardware with no s
 | `LANGFUSE_PUBLIC_KEY` | Optional | From cloud.langfuse.com. Enables LLM call tracing. |
 | `LANGFUSE_SECRET_KEY` | Optional | From cloud.langfuse.com. |
 | `LANGFUSE_HOST` | Optional | Defaults to https://cloud.langfuse.com |
-| `PRIMARY_MODEL` | Optional | Defaults to `openrouter/auto`. Override with specific model string. |
+| `PRIMARY_MODEL` | Optional | Defaults to `meta-llama/llama-3.3-70b-instruct:free`. Override with any OpenRouter model string. |
 | `CHROMA_PERSIST_DIR` | Optional | Defaults to `./data/chroma`. Set to `/data/chroma` in Docker. |
 
 ---

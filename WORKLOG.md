@@ -6,6 +6,33 @@ CLAUDE.md (the standing rules).
 
 ---
 
+## 2026-07-14 — P1-3/4/6/7/8: schema de-dup, config/doc accuracy, LICENSE, compose
+
+**Author:** Claude (Opus 4.8), autonomous execution loop.
+
+- **P1-3:** removed the duplicate `AnalyzeRequest`/`AnalyzeResponse` from
+  `api/routes/analyze.py`; it now imports the canonical models from
+  `models/schemas.py`. This also turned on request validation (`min_length=2` →
+  short names 422, verified) and made the response `report` strongly typed
+  (`DueDiligenceReport`; the workflow's dict output coerces cleanly, verified).
+- **P1-4:** unified the model default on `meta-llama/llama-3.3-70b-instruct:free`
+  across `config.py`, `.env.example`, and the README env table. Chose a concrete
+  free slug over `openrouter/auto` (can bill) and the invalid `openrouter/free`.
+  Confirmed the code default with `Settings(_env_file=None)`. **Flagged:** the
+  user's gitignored `.env` still says `openrouter/free` — left untouched (their
+  secret/runtime file) and noted in TODO P1-4 as an owner action.
+- **P1-6:** corrected the `research_agent.py` docstring/comment from yfinance to
+  SEC EDGAR (matching the actual `get_stock_info` implementation).
+- **P1-7:** added MIT `LICENSE` referenced by the README.
+- **P1-8:** README promised `docker/docker-compose.yml` + a `docker-compose up`
+  Quick Start with no compose file present. Added a real root `docker-compose.yml`
+  (builds the single-container root Dockerfile, ports 7860/8000, `.env`, persistent
+  `chroma_data` volume) so the documented command works, and fixed the structure
+  block. Validated via `docker compose config`.
+- Gates after this batch: `ruff` clean, `mypy` clean (31 files), `pytest` 31 passed.
+
+---
+
 ## 2026-07-14 — P1-2: establish real test coverage
 
 **Author:** Claude (Opus 4.8), autonomous execution loop.

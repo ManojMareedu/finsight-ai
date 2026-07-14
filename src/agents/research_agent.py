@@ -9,11 +9,11 @@ logger = logging.getLogger(__name__)
 
 def research_agent(state: DueDiligenceState) -> dict:
     """
-    Agent 1: Web Research + Stock Data.
+    Agent 1: Web Research + Financial Metrics.
 
-    Fetches live stock metrics via yfinance.
-    Tavily web search is optional — if the API key is missing it
-    degrades gracefully and still returns stock data.
+    Fetches financial metrics from SEC EDGAR (XBRL company facts) via
+    get_stock_info. Tavily web search is optional — if the API key is missing
+    it degrades gracefully and still returns the EDGAR financials.
     """
     company = state["company_name"]
     provided_ticker = state.get("company_ticker", "")
@@ -67,7 +67,7 @@ def research_agent(state: DueDiligenceState) -> dict:
     except Exception as e:
         logger.warning(f"Tavily setup failed: {e}")
 
-    # --- yfinance stock data (always runs, no API key needed) ---
+    # --- EDGAR financial metrics (always runs, no API key needed) ---
     stock_data = get_stock_info(ticker)
     if stock_data:
         stock_summary = (
