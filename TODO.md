@@ -77,6 +77,22 @@ architecture decision), P2-4 remainder, P2-5 (roadmap features), P1-5b.
   gate. Documented as manual/local (README roadmap + config comments). mypy/ruff
   clean; both backends verified to construct offline.
 
+- [x] **P1-5c · RAGAS returned NaN for all metrics — FIXED 2026-07-14.** Full RCA
+  in WORKLOG (dep drift `langchain-core` 1.x; judge unreachable/weak-JSON; RAGAS
+  parses only the `ChatOpenAI` path not `ChatOllama`; free-tier 50 req/day cap;
+  NaN written silently). Fixes: pin `langchain-core`, dedicated `ragas_judge_model`,
+  local judge via Ollama `/v1`, fail-loud NaN guard, `RunConfig` timeout,
+  `ragas_max_samples`. Rerun computes all 4 metrics (no NaN); results in
+  `evaluation/results/latest.json` (N=3 local run). Commit 307de80.
+
+- [ ] **P1-5d · Full-set benchmark with the capable judge.** The N=3 run used a
+  weak local judge (gemma4) because the OpenRouter free daily cap (50/day) was
+  exhausted; scores are conservative/noisy. Rerun the full 10-item set with
+  `RAGAS_JUDGE_PROVIDER=openrouter` / `openai/gpt-oss-20b:free` after the quota
+  resets (validation on 1 sample gave 1.0/0.924/1.0/1.0), or with a stronger local
+  judge that fits RAGAS's timeout. Also revisit the P1-4 answer-gen default —
+  `openrouter/free` is in fact a valid, working slug.
+
 - [ ] **P1-5b · Wire eval into an automated gate + self-contained fixture.**
   Deferred from P1-5. `collect_eval_data` still requires a pre-populated ChromaDB
   (calls `retrieve_context`). To make eval runnable from a clean checkout, seed a
