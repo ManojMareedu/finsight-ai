@@ -170,3 +170,46 @@ def test_edgar_returns_empty_on_fetch_failure(monkeypatch):
 
     monkeypatch.setattr(df.requests, "get", _boom)
     assert df.get_financials_from_edgar("320193") == {}
+
+
+# --- CIK lookup caching (P2-4) -----------------------------------------------
+
+
+def test_company_tickers_fetched_once_across_lookups(monkeypatch):
+    df._get_edgar_tickers.cache_clear()
+    calls = {"n": 0}
+
+    payload = {
+        "0": {"ticker": "AAPL", "title": "Apple Inc.", "cik_str": 320193},
+        "1": {"ticker": "MSFT", "title": "Microsoft Corp", "cik_str": 789019},
+    }
+
+    def _counting_get(*a, **k):
+        calls["n"] += 1
+        return _FakeResp(payload)
+
+    monkeypatch.setattr(df.requests, "get", _counting_get)
+
+    # Three lookups (as happens across research/filing/synthesis) -> one download
+    assert df.get_company_cik("AAPL") == "320193"
+    assert df.get_company_cik("Microsoft") == "789019"
+    assert df.get_company_cik("Apple") == "320193"
+    assert calls["n"] == 1
+
+    df._get_edgar_tickers.cache_clear()
+
+
+def test_cik_fetch_failure_not_cached(monkeypatch):
+    df._get_edgar_tickers.cache_clear()
+
+    def _boom(*a, **k):
+        raise RuntimeError("network down")
+
+    monkeypatch.setattr(df.requests, "get", _boom)
+    assert df.get_company_cik("Apple") is None  # error -> None, not cached
+
+    payload = {"0": {"ticker": "AAPL", "title": "Apple Inc.", "cik_str": 320193}}
+    monkeypatch.setattr(df.requests, "get", lambda *a, **k: _FakeResp(payload))
+    assert df.get_company_cik("Apple") == "320193"  # retried successfully
+
+    df._get_edgar_tickers.cache_clear()
