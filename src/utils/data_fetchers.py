@@ -1,5 +1,6 @@
 import logging
 import re
+from functools import lru_cache
 from typing import Optional
 
 import requests
@@ -66,15 +67,13 @@ def get_company_cik(company_name: str) -> Optional[str]:
     """
     Use EDGAR's company_tickers.json for reliable CIK lookup.
     No scraping - official SEC endpoint, updated daily.
+
+    The ticker list is fetched once per process (see _get_edgar_tickers) rather
+    than re-downloaded on every call — get_company_cik runs several times per
+    analysis (research, filing ingestion, synthesis).
     """
     try:
-        resp = requests.get(
-            "https://www.sec.gov/files/company_tickers.json",
-            headers=EDGAR_HEADERS,
-            timeout=15,
-        )
-        resp.raise_for_status()
-        tickers = resp.json()
+        tickers = _get_edgar_tickers()
     except Exception as e:
         logger.error(f"Failed to fetch EDGAR company list: {e}")
         return None
@@ -82,24 +81,44 @@ def get_company_cik(company_name: str) -> Optional[str]:
     name_lower = company_name.lower().strip()
 
     # Pass 1: exact ticker match (e.g. user typed "TSLA")
-    for entry in tickers.values():
-        if name_lower == entry["ticker"].lower():
-            return str(entry["cik_str"])
+    for ticker, _title, cik in tickers:
+        if name_lower == ticker.lower():
+            return cik
 
     # Pass 2: company name contains the search term
-    for entry in tickers.values():
-        if name_lower in entry["title"].lower():
-            return str(entry["cik_str"])
+    for _ticker, title, cik in tickers:
+        if name_lower in title.lower():
+            return cik
 
     # Pass 3: search term contains a word from the company name (looser)
     name_words = [w for w in name_lower.split() if len(w) > 3]
-    for entry in tickers.values():
-        title_lower = entry["title"].lower()
+    for _ticker, title, cik in tickers:
+        title_lower = title.lower()
         if any(word in title_lower for word in name_words):
-            return str(entry["cik_str"])
+            return cik
 
     logger.warning(f"No CIK found for: {company_name}")
     return None
+
+
+@lru_cache(maxsize=1)
+def _get_edgar_tickers() -> tuple[tuple[str, str, str], ...]:
+    """
+    Fetch and cache SEC company_tickers.json once per process.
+
+    Returns an immutable tuple of (ticker, title, cik_str) in the SEC's original
+    order so the three-pass search in get_company_cik behaves identically. On a
+    fetch error the exception propagates (and is NOT cached), so the next call
+    retries — the caller downgrades it to a None CIK.
+    """
+    resp = requests.get(
+        "https://www.sec.gov/files/company_tickers.json",
+        headers=EDGAR_HEADERS,
+        timeout=15,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    return tuple((e["ticker"], e["title"], str(e["cik_str"])) for e in data.values())
 
 
 def _clean_filing_text(raw: str) -> str:

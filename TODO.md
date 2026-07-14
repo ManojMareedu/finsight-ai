@@ -111,12 +111,22 @@ Last reviewed: **2026-07-14** (see WORKLOG entries 2026-07-14).
 
 - [ ] **P2-3 · Consolidate the two ChromaDB access patterns.** `ingestion.py` uses
   the raw `chromadb.PersistentClient` with manually computed embeddings, while
-  `retriever.py` uses the `langchain_chroma.Chroma` wrapper. Two code paths against
-  one collection is a compatibility risk; standardize on one.
+  `retriever.py` uses the `langchain_chroma.Chroma` wrapper. **DEFERRED (needs
+  owner decision) 2026-07-14:** both paths currently work; unifying them rewrites
+  the core RAG **write** path (collection creation with `hnsw:space=cosine`, id +
+  metadata handling) and can only be safely validated with a live EDGAR ingestion,
+  which isn't possible offline in this loop. Per "don't rewrite working code
+  unnecessarily," left for a deliberate, integration-tested change. Recommended
+  target: standardize on `langchain_chroma.Chroma` for both, then ingest a real
+  company end-to-end and diff retrieval output before/after.
 
-- [ ] **P2-4 · Resilience for external calls.** Add timeouts already exist, but no
-  retry/backoff on EDGAR/LLM transient failures and no response caching. Consider a
-  simple retry + a per-company cache (also unblocks the roadmap caching item).
+- [~] **P2-4 · Resilience for external calls.** **PARTIAL 2026-07-14:** cached the
+  SEC `company_tickers.json` fetch via `_get_edgar_tickers` (`lru_cache`) — it was
+  re-downloaded (~1MB+) on every `get_company_cik`, which runs 3+ times per
+  analysis; now one download per process (verified by test: 3 lookups → 1 fetch;
+  fetch errors are not cached, so it retries). **Remaining:** retry/backoff on
+  transient EDGAR/LLM failures, and a per-company report/response cache (the
+  roadmap caching item).
 
 - [ ] **P2-5 · Roadmap features** (from README, unstarted): streaming responses to
   the UI, multi-company comparison mode, international filings, risk-change email

@@ -6,6 +6,33 @@ CLAUDE.md (the standing rules).
 
 ---
 
+## 2026-07-14 — P2-1/2 + P2-4 (partial); P2-3 deferred
+
+**Author:** Claude (Opus 4.8), autonomous execution loop.
+
+- **P2-1:** removed the stray committed `apple_report.pdf` (generated output,
+  referenced nowhere); hardened `.gitignore` (`*.pdf`, tool caches). **Kept
+  `.hf_rebuild`** — verification showed it's an intentional HF Space rebuild
+  trigger (`# rebuild trigger`, committed as "ci: trigger HF Space rebuild"), not a
+  stray artifact. Corrected the audit's mislabel.
+- **P2-2:** ran `black` across `src`+`tests` (18 files) and added
+  `black --check src tests` to CI and `make lint`, so formatting is enforced going
+  forward. `ruff`/`black` scope extended to `tests/`. Verified tests pass in a
+  CI-like env (no `.env`, no secret).
+- **P2-4 (partial):** `get_company_cik` re-downloaded the full SEC
+  `company_tickers.json` on every call and runs 3+ times per analysis. Extracted
+  `_get_edgar_tickers()` behind `lru_cache(maxsize=1)` (immutable tuple, SEC order
+  preserved so the 3-pass search is identical). Objective result: **3 lookups → 1
+  network fetch** (unit test), and fetch errors aren't cached (retry preserved).
+  Remaining retry/backoff + report cache tracked in P2-4.
+- **P2-3 deferred:** consolidating the two ChromaDB access patterns rewrites the
+  core RAG write path and needs live-EDGAR integration testing to validate safely
+  — an architecture decision left for the owner rather than a blind refactor of
+  working code. Rationale + recommended approach recorded in TODO P2-3.
+- Suite now **33 passing**; `ruff`/`black`/`mypy` all clean.
+
+---
+
 ## 2026-07-14 — P1-5: de-hardwire RAGAS judge + make eval a real gate
 
 **Author:** Claude (Opus 4.8), autonomous execution loop.
