@@ -6,6 +6,81 @@ CLAUDE.md (the standing rules).
 
 ---
 
+## 2026-07-14 — RAGAS all-NaN: root-cause analysis + fix + successful rerun
+
+**Author:** Claude (Opus 4.8). Task: investigate why RAGAS returned NaN for every
+metric, as a pipeline failure. Verified each stage with runtime evidence.
+
+### Evidence gathered (per stage)
+- **Dataset construction:** legacy columns (`question/answer/contexts/ground_truth`)
+  — verified RAGAS 0.2.6 *does* accept them (metrics reached computation), so not
+  the cause.
+- **Retrieval:** ChromaDB populated (Apple 64 / Microsoft 64 / Tesla 63 chunks);
+  `collect_eval_data` retrieved contexts fine (Collected 10/10).
+- **Answer generation:** worked (via OpenRouter, then local).
+- **Judge model:** the original run used local Ollama `llama3.2` — **not running**
+  (`:11434` refused) → all NaN.
+- **Env:** `langchain-core` had drifted to **1.2.23** and `langchain-ollama` to
+  **1.0.1** (unpinned; `langchain-ollama 1.x` pulled core 1.x), which is
+  incompatible with `langchain-openai 0.2.9`/`ragas 0.2.6`. Proven: `ChatOpenAI`
+  raised `OpenAIError: api_key must be set` at construction under core 1.x; fine
+  after repair.
+- **Judge output/API errors:** with `raise_exceptions=True`, RAGAS threw
+  `ValidationError: Verification missing reason/verdict`, input
+  `{'text': '{"reason":...,"verdict":1}'}` — the judge's JSON wasn't parsed.
+  Weak/free models (`openrouter/free`) don't emit RAGAS's structured JSON.
+- **Rate limits:** raw capture showed **HTTP 429 "free-models-per-day … 
+  X-RateLimit-Remaining: 0"** — OpenRouter free tier caps at **50 req/day**. RAGAS
+  makes hundreds of calls; `context_precision` (one call per retrieved context) is
+  the most call-heavy and the first to hit the wall → it went NaN while the other
+  three computed.
+- **Exception handling:** the pipeline wrote `NaN` to `latest.json` as if it were a
+  valid result — a silent failure.
+- **RAGAS + local Ollama:** even reachable, the native `ChatOllama` path yields
+  all-NaN; the **`ChatOpenAI` path parses correctly**. Verified by driving the
+  local model through Ollama's OpenAI-compatible `/v1` endpoint — all 4 metrics
+  computed.
+
+### Root cause (chain, all pipeline/environment — not model quality)
+1. Dependency drift (`langchain-core` 1.x) broke `ChatOpenAI` + RAGAS internals.
+2. Default judge was local Ollama, typically not running.
+3. Weak judge models emit JSON RAGAS can't parse.
+4. RAGAS 0.2.6 only parses the `ChatOpenAI` code path, not `ChatOllama`.
+5. Free-tier 50 req/day cap starves the call-heavy metrics.
+6. NaN was written as a valid result (no guard).
+
+### Fix (commit 307de80)
+- Pin `langchain-core>=0.3.15,<0.4` (+ keep `langchain-ollama==0.2.3`) in
+  requirements; repaired the local venv to match.
+- Dedicated `ragas_judge_model` (`openai/gpt-oss-20b:free`), provider default →
+  `openrouter`.
+- Local judge now uses `ChatOpenAI` → Ollama `/v1` (`ollama_base_url`), the path
+  RAGAS can parse. Offline answer-gen reuses the same LLM.
+- **Fail-loud:** NaN now raises `RuntimeError` (naming the failing metrics +
+  likely causes) and writes nothing; `safe_score` drops NaN rows.
+- `RunConfig(timeout, max_workers)` so slow local judges don't time-out to NaN;
+  `ragas_max_samples` to fit free-tier daily caps.
+
+### Successful rerun — all metrics computed (no NaN)
+- **Validation (capable judge, `openai/gpt-oss-20b:free`, 1 real Apple sample):**
+  faithfulness **1.0**, answer_relevancy **0.924**, context_precision **1.0**,
+  context_recall **1.0** — proves the pipeline computes all four.
+- **Benchmark run (local `gemma4:e4b-mlx` via /v1, N=3, `evaluation/results/latest.json`):**
+  faithfulness **0.8333**, answer_relevancy **0.2085**, context_precision **0.0**,
+  context_recall **0.2222**, passed=false. Every metric is a real number.
+  Caveat (model/eval quality, not pipeline): `gemma4:e4b` is a weak free judge, so
+  absolute values are conservative/noisy (esp. context_precision 0.0); the run was
+  local because the OpenRouter free daily quota was exhausted, and capped at N=3
+  because the local judge is slow (~60–90s per context_precision job).
+
+### Follow-ups (see TODO)
+- Full 10-sample benchmark with the capable judge needs the OpenRouter free daily
+  quota to reset (UTC midnight) or credits — `ragas_max_samples` keeps a run under
+  the 50/day cap. Also: `openrouter/free` turns out to be a *valid* slug (works),
+  contra the P1-4 assumption — worth revisiting the answer-gen default.
+
+---
+
 ## 2026-07-14 — P2-1/2 + P2-4 (partial); P2-3 deferred
 
 **Author:** Claude (Opus 4.8), autonomous execution loop.
