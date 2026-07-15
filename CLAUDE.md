@@ -76,8 +76,7 @@ bash start.sh       # both, as in the container
 # Quality gates (must all pass — this is the DoD gate)
 make lint           # ruff check src tests && black --check src tests && mypy src
 make test           # pytest tests/ -v
-make eval           # RAGAS quality gate (judge via RAGAS_JUDGE_PROVIDER: openrouter
-                    #   default, or ollama local via /v1). Needs an ingested ChromaDB.
+make eval           # RAGAS quality gate → evaluation/results/latest.json (pass/fail)
 make benchmark      # full retrieval+RAG benchmark → evaluation/results/{json,md}
 
 # Prefer invoking tools via the venv python if console-script shebangs are broken:
@@ -85,6 +84,21 @@ make benchmark      # full retrieval+RAG benchmark → evaluation/results/{json,
 .venv/bin/ruff check src
 .venv/bin/python -m mypy src
 ```
+
+### Evaluation & benchmark provider (OpenRouter primary)
+
+- **OpenRouter is the primary evaluation provider.** Judge defaults to
+  `openai/gpt-oss-20b:free` (`RAGAS_JUDGE_PROVIDER=openrouter`,
+  `RAGAS_JUDGE_MODEL=...`). The project's OpenRouter account is **no longer
+  free-tier** (~1,000 requests/day), so full-set RAGAS runs are practical — no
+  need to cap `RAGAS_MAX_SAMPLES` for a normal run.
+- **Ollama is an optional offline fallback only** (`RAGAS_JUDGE_PROVIDER=ollama`,
+  via the OpenAI-compatible `/v1` endpoint — RAGAS 0.2.6 does not parse the native
+  `ChatOllama` path). Use it when offline/rate-limited; it is slower and noisier.
+- Deterministic benchmark metrics (retrieval precision@k, recall, latency,
+  success rate) need **no** LLM and always run; RAGAS metrics need a judge.
+- `context_precision` is RAGAS's most parse-fragile metric on free judges and may
+  report `null` — that means "not scored", not zero.
 
 ## 4. Engineering standards
 
@@ -126,6 +140,10 @@ A change is **Done** only when all of the following hold:
 - [ ] TODO.md updated (item checked off or follow-ups added).
 - [ ] A WORKLOG.md entry appended describing what changed and why.
 - [ ] CI is expected to pass (the same gates run there).
+- [ ] If retrieval/eval behavior changed: rerun `make benchmark` and confirm the
+      objective metrics did not regress (revert changes that don't measurably help).
+- [ ] If the Dockerfile/deps/entrypoint changed: `docker build` succeeds and the
+      container serves `/health` (verified for v1.0.0 — see WORKLOG 2026-07-15).
 
 ## 6. Known landmines (see TODO.md for full backlog)
 

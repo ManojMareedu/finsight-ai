@@ -106,12 +106,20 @@ finsight-ai/
 │   │   └── tracer.py              # Langfuse decorator pattern
 │   ├── ui/
 │   │   └── app.py                 # Streamlit UI
+│   ├── evaluation/
+│   │   ├── ragas_eval.py          # RAGAS quality gate (pass/fail)
+│   │   ├── benchmark.py           # retrieval + RAG benchmark (deterministic + RAGAS)
+│   │   └── golden_dataset.json    # 10 Q/A pairs (Apple / Microsoft / Tesla 10-Ks)
 │   └── utils/
 │       ├── config.py              # Pydantic Settings from .env
 │       ├── data_fetchers.py       # EDGAR CIK lookup, 10-K download, XBRL financials
 │       ├── llm_client.py          # OpenRouter wrapper with system message normalisation
 │       └── pdf_generator.py       # ReportLab PDF generation
-├── tests/
+├── tests/                         # 42 network-free unit tests
+├── docs/
+│   ├── ENGINEERING_DECISIONS.md   # why each major decision was made
+│   └── RELEASE_CHECKLIST.md       # release status, limitations, reproducibility
+├── evaluation/results/            # benchmark_latest.{json,md}, latest.json (+ guide)
 ├── docker/
 │   └── Dockerfile.ui             # UI-only image (used by CI build check)
 ├── .github/workflows/
@@ -249,17 +257,20 @@ Every metric is documented in the generated report — *what it measures, why it
 matters, an acceptable range, and its limitations* — so the numbers are
 interpretable without reading the code.
 
-**Latest run** (judge `openai/gpt-oss-20b:free`, 10 questions; full report:
+**Latest run** (judge `openai/gpt-oss-20b:free`, all 10 questions RAGAS-scored;
+full report:
 [`evaluation/results/benchmark_latest.md`](evaluation/results/benchmark_latest.md)):
 
 | Retrieval Precision@8 | Retrieval Recall | Success Rate | Latency p95 | Faithfulness | Answer Relevancy |
 |---|---|---|---|---|---|
-| 1.00* | 0.79 | 10/10 | 50.6s | 0.83 | 0.54 |
+| 1.00* | 0.79 | 10/10 | 33.4s | 0.93 | 0.73 |
 
 *Retrieval precision varies ~0.975–1.00 across runs — ChromaDB's HNSW index is
-approximate nearest-neighbor, not exact. `context_precision` came back `null` —
-RAGAS's most parse-fragile metric failed on the free judge; reported honestly
-rather than as a zero.
+approximate nearest-neighbor, not exact. `context_precision` came back `null`
+(RAGAS's most parse-fragile metric failed even on the strongest free judge —
+reported honestly, not as a zero); `context_recall` (0.30) is depressed because
+several ground-truth answers are exact financial figures that live in EDGAR XBRL,
+not the 10-K narrative the retriever searches (see Engineering Decisions §4).
 
 **Retrieval optimization was benchmark-driven.** The retriever and ingestion
 settings were tuned by rerunning the benchmark and keeping only changes that moved
@@ -286,6 +297,17 @@ Reports land in [`evaluation/results/`](evaluation/results/) as timestamped JSON
 Markdown (`benchmark_latest.md` is the newest). **Caveat:** RAGAS scores depend on
 the judge; free judges are noisy and `context_precision` is parse-fragile, so the
 deterministic metrics are the high-confidence signal and RAGAS is supplementary.
+
+---
+
+## Documentation
+
+- [`docs/ENGINEERING_DECISIONS.md`](docs/ENGINEERING_DECISIONS.md) — why every major
+  decision was made (problem, alternatives, tradeoffs, evidence). Interview-grade.
+- [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) — release status,
+  limitations, tradeoffs, and a reproducibility guide.
+- [`CLAUDE.md`](CLAUDE.md) — engineering standards, architecture, and Definition of Done.
+- [`WORKLOG.md`](WORKLOG.md) — dated engineering journal.
 
 ---
 
