@@ -16,9 +16,14 @@ ruff / black / mypy clean; 42 tests pass; `pip check` OK; deps match pins
 (`langchain-core 0.3.63`); no dead code (`ruff --select F`), no TODO/FIXME in
 `src`, no duplicated schemas, `.env` untracked, no leaked secrets, LICENSE present.
 FastAPI `/health` → 200, `/docs` → 200, OpenAPI paths `[/health, /analyze]`.
-HF frontmatter correct (`sdk: docker`, `app_port: 7860`); Dockerfile healthcheck
-`/health`. **Docker build not runnable here** (daemon down) — CI (`docker/Dockerfile.ui`)
-and the live HF Space are the build/deploy evidence.
+HF frontmatter correct (`sdk: docker`, `app_port: 7860`).
+
+**Docker verified (started the daemon):** both `docker/Dockerfile.ui` (CI) and the
+root `Dockerfile` (HF deploy — bakes the embedding model) build clean; the app
+imports inside the image; running the root image serves `/health` →
+`{"status":"ok"}` and Docker `HEALTHCHECK` reports `healthy` (the earlier
+`/api/v1/health`→`/health` fix confirmed in a real container). Test images removed
+afterward.
 
 ### Added — comprehensive benchmark (`src/evaluation/benchmark.py`, `make benchmark`)
 Deterministic metrics (no LLM, cover **all** questions): retrieval precision@k,
