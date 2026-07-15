@@ -6,6 +6,19 @@ ENGINEERING_GUIDE.md (the standing rules).
 
 ---
 
+## 2026-07-15 — Fix CI test collection (pythonpath)
+
+**Author:** Manoj Mareedu.
+
+GitHub Actions ran `pytest` from the repo root with no `PYTHONPATH`, so every test
+module importing `src.*` failed to collect (`ModuleNotFoundError: No module named
+'src'` × 5 modules) and the CI test step was red — masked locally because local
+runs export `PYTHONPATH=$(pwd)`. Fix: add `pythonpath = ["."]` to
+`[tool.pytest.ini_options]` so collection works everywhere without env setup.
+Verified by running `pytest` with `PYTHONPATH` unset (42 passed); CI now green.
+
+---
+
 ## 2026-07-15 — v1.0.0 release preparation
 
 **Author:** Manoj Mareedu. Final release pass — no new features; docs,
