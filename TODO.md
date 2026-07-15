@@ -85,6 +85,13 @@ architecture decision), P2-4 remainder, P2-5 (roadmap features), P1-5b.
   `ragas_max_samples`. Rerun computes all 4 metrics (no NaN); results in
   `evaluation/results/latest.json` (N=3 local run). Commit 307de80.
 
+- [x] **R1 · Retrieval-quality optimization — DONE 2026-07-15.** Benchmark-validated
+  via a deterministic golden-set diagnostic + RAGAS. Kept: retriever
+  MMR(k6,fetch_k20,λ0.7) → similarity(k8); ingestion max_chars 50k → 150k. Reverted
+  (measured worse/no gain): chunk sizes 500/700, max_chars 300k. Before→after:
+  company_precision@k 0.8167→0.9625, gt_keyword_recall 0.6081→0.7942, RAGAS
+  faithfulness 0.8333→1.0000. Commit 3e334d8. See WORKLOG 2026-07-15.
+
 - [ ] **P1-5d · Full-set benchmark with the capable judge.** The N=3 run used a
   weak local judge (gemma4) because the OpenRouter free daily cap (50/day) was
   exhausted; scores are conservative/noisy. Rerun the full 10-item set with

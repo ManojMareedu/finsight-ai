@@ -49,7 +49,7 @@ graph TD
     H --> I[JSON Response + PDF Download]
 
     D --> |Tavily Web Search + EDGAR Financials| D
-    E --> |SEC 10-K via EDGAR + ChromaDB MMR Retrieval| E
+    E --> |SEC 10-K via EDGAR + ChromaDB similarity retrieval| E
     F --> |LLM Risk Extraction + Severity Scoring| F
     G --> |Pydantic Schema Enforcement| G
 ```
@@ -93,7 +93,7 @@ finsight-ai/
 │   │   └── workflow.py            # Graph nodes, edges, conditional routing
 │   ├── rag/
 │   │   ├── ingestion.py           # Document loading, chunking (1000 chars, 200 overlap)
-│   │   ├── retriever.py           # ChromaDB MMR retrieval (k=6, fetch_k=20)
+│   │   ├── retriever.py           # ChromaDB similarity retrieval (k=8)
 │   │   └── embeddings.py          # sentence-transformers wrapper
 │   ├── models/
 │   │   └── schemas.py             # DueDiligenceReport, RiskFactor, FinancialSnapshot
@@ -228,9 +228,9 @@ OpenRouter routes to whichever free model is available. Some models (Gemma, Phi)
 
 A report dated today but based on a 2024 filing is misleading. Every report is stamped with the actual 10-K filing date pulled from EDGAR's submission API. A safety net in `synthesis_agent.py` overrides any hallucinated date the LLM returns.
 
-**Why ChromaDB uses MMR retrieval**
+**Why ChromaDB uses pure-relevance similarity retrieval (k=8)**
 
-Standard similarity search returns the top-k most similar chunks, which are often near-duplicates of each other. MMR (Maximal Marginal Relevance) balances similarity with diversity: it returns chunks that are relevant to the query and different from each other. This gives the synthesis agent richer context covering financials, risks, competition, and strategy from a single retrieval pass.
+The retriever originally used MMR (Maximal Marginal Relevance), which trades some relevance for diversity. Benchmarking on the golden set showed that diversity actually *hurt* here: MMR lowered both retrieval precision and recall versus plain similarity (company_precision 0.82→1.0, gt_keyword_recall 0.61→0.77 once switched to similarity at k=8). Financial 10-K QA rewards retrieving the most on-topic chunks, not diverse-but-weaker ones, so the retriever uses similarity search with k=8. See WORKLOG 2026-07-15 for the full before/after.
 
 ---
 
