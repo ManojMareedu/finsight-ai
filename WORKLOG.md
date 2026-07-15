@@ -56,8 +56,11 @@ RAGAS pipeline (gemma judge, N=3, same judge before/after):
 |---|---|---|---|
 | faithfulness | 0.8333 | **1.0000** | ↑ better-grounded answers |
 | context_recall | 0.3333 | 0.3333 | flat (small-N, noisy) |
-| answer_relevancy | 0.4618 | 0.1982 | gemma noise (0.21–0.46 across same-config runs); not a retrieval metric |
-| context_precision | 0.0 | 0.0 | gemma floors this; excluded from signal |
+| context_precision | 0.0000 | **0.1111** | ↑ off the floor — gemma is unreliable here but the direction matches the deterministic gain |
+| answer_relevancy | 0.4618 | 0.1969 | gemma noise (0.20–0.46 across same-config runs); not a retrieval metric |
+
+(`latest.json` holds the full optimized-config run: faithfulness 1.0,
+context_precision 0.1111, context_recall 0.3333, answer_relevancy 0.1969.)
 
 ### Notes / follow-ups
 - Re-ingested the main store at 150k (Apple 190 / Microsoft 189 / Tesla 189 chunks,
