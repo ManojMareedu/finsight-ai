@@ -16,3 +16,6 @@ ignore_missing_imports = true
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+# Put the repo root on sys.path so `import src.*` works without PYTHONPATH
+# (this is what CI relies on — local runs used PYTHONPATH which masked it).
+pythonpath = ["."]
