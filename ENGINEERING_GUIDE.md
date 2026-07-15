@@ -1,6 +1,6 @@
-# ENGINEERING_GUIDE.md
+# Engineering Guide
 
-Operating guide for everyone working in this repository. Read this
+Engineering guide for this repository. Read this
 first. It defines what the project is, how it is built, the engineering standards
 we hold code to, and the Definition of Done every change must meet before it is
 considered complete.
@@ -166,7 +166,7 @@ Still live:
   long-running server must pick up daily SEC ticker updates, restart it (or add
   TTL). Reference data changes slowly, so this is acceptable today.
 
-## 7. Conventions for agents
+## 7. Conventions
 
 - The EDGAR migration is intentional — do not re-add yfinance. Financial figures
   come from EDGAR XBRL (`get_financials_from_edgar`), not the 10-K text; RAG

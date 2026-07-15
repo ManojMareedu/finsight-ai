@@ -191,7 +191,7 @@ measurement, the numbers come from the benchmark harness
 ## 12. LLM access: OpenRouter (model-agnostic router)
 
 - **Problem:** Access capable LLMs at zero/low cost without locking to one vendor.
-- **Alternatives:** direct OpenAI/Anthropic (paid), a single hosted OSS model,
+- **Alternatives:** direct vendor APIs, e.g. OpenAI (paid), a single hosted OSS model,
   OpenRouter.
 - **Chosen:** OpenRouter via the OpenAI SDK (`src/utils/llm_client.py`), one key
   for many models. System messages are normalized into the first user turn because
