@@ -1,0 +1,134 @@
+{
+  "timestamp": "2026-07-15T10:03:22.405473+00:00",
+  "num_questions": 10,
+  "config": {
+    "judge_provider": "openrouter",
+    "judge_model": "openai/gpt-oss-20b:free",
+    "answer_model": "openrouter/free"
+  },
+  "retrieval": {
+    "precision_at_k": 1.0,
+    "recall": 0.7942,
+    "k": 8
+  },
+  "reliability": {
+    "success_rate": 1.0,
+    "successful": 10,
+    "total": 10
+  },
+  "latency_s": {
+    "retrieval_mean": 0.7239,
+    "retrieval_p95": 5.7237,
+    "total_mean": 17.5738,
+    "total_p95": 50.5876
+  },
+  "ragas": {
+    "faithfulness": 0.8333,
+    "answer_relevancy": 0.5372,
+    "context_precision": null,
+    "context_recall": 0.3333
+  },
+  "per_item": [
+    {
+      "question": "What were Apple total revenues in fiscal year 2023?",
+      "success": true,
+      "retrieval_latency_s": 5.7237,
+      "k": 8,
+      "retrieval_precision_at_k": 1.0,
+      "retrieval_recall": 1.0,
+      "generation_latency_s": 3.4573,
+      "total_latency_s": 9.181
+    },
+    {
+      "question": "What is the primary risk factor cited in Tesla 10-K?",
+      "success": true,
+      "retrieval_latency_s": 0.1307,
+      "k": 8,
+      "retrieval_precision_at_k": 1.0,
+      "retrieval_recall": 0.875,
+      "generation_latency_s": 29.7951,
+      "total_latency_s": 29.9258
+    },
+    {
+      "question": "What segment generates the most revenue for Apple?",
+      "success": true,
+      "retrieval_latency_s": 0.283,
+      "k": 8,
+      "retrieval_precision_at_k": 1.0,
+      "retrieval_recall": 0.625,
+      "generation_latency_s": 50.3046,
+      "total_latency_s": 50.5876
+    },
+    {
+      "question": "How does Microsoft describe its cloud business performance?",
+      "success": true,
+      "retrieval_latency_s": 0.2348,
+      "k": 8,
+      "retrieval_precision_at_k": 1.0,
+      "retrieval_recall": 0.7,
+      "generation_latency_s": 2.3251,
+      "total_latency_s": 2.5599
+    },
+    {
+      "question": "What risks does Tesla identify related to vehicle deliveries?",
+      "success": true,
+      "retrieval_latency_s": 0.1035,
+      "k": 8,
+      "retrieval_precision_at_k": 1.0,
+      "retrieval_recall": 0.7273,
+      "generation_latency_s": 8.5497,
+      "total_latency_s": 8.6532
+    },
+    {
+      "question": "What is Apple's gross margin percentage for fiscal 2023?",
+      "success": true,
+      "retrieval_latency_s": 0.0736,
+      "k": 8,
+      "retrieval_precision_at_k": 1.0,
+      "retrieval_recall": 1.0,
+      "generation_latency_s": 6.465,
+      "total_latency_s": 6.5386
+    },
+    {
+      "question": "What are the main products Apple sells?",
+      "success": true,
+      "retrieval_latency_s": 0.0804,
+      "k": 8,
+      "retrieval_precision_at_k": 1.0,
+      "retrieval_recall": 1.0,
+      "generation_latency_s": 5.4916,
+      "total_latency_s": 5.572
+    },
+    {
+      "question": "How does Tesla describe its manufacturing strategy?",
+      "success": true,
+      "retrieval_latency_s": 0.1348,
+      "k": 8,
+      "retrieval_precision_at_k": 1.0,
+      "retrieval_recall": 0.4545,
+      "generation_latency_s": 6.0027,
+      "total_latency_s": 6.1375
+    },
+    {
+      "question": "What is Microsoft's primary source of revenue?",
+      "success": true,
+      "retrieval_latency_s": 0.0984,
+      "k": 8,
+      "retrieval_precision_at_k": 1.0,
+      "retrieval_recall": 0.7273,
+      "generation_latency_s": 36.3148,
+      "total_latency_s": 36.4132
+    },
+    {
+      "question": "What competitive risks does Apple identify in its 10-K?",
+      "success": true,
+      "retrieval_latency_s": 0.376,
+      "k": 8,
+      "retrieval_precision_at_k": 1.0,
+      "retrieval_recall": 0.8333,
+      "generation_latency_s": 19.7933,
+      "total_latency_s": 20.1693
+    }
+  ],
+  "ragas_num_samples": 3
+}
