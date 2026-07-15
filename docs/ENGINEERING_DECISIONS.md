@@ -56,7 +56,7 @@ measurement, the numbers come from the benchmark harness
   rather than overwrites (`src/graph/state.py`).
 - **Tradeoffs:** `TypedDict` gives static-check ergonomics but not runtime
   validation (that lives at the boundary — see §8). The `add` reducer is subtle;
-  it is documented in CLAUDE.md so future edits don't return a running total.
+  it is documented in ENGINEERING_GUIDE.md so future edits don't return a running total.
 - **Evidence / why:** The reducer is the correct LangGraph pattern for loop depth;
   without it, concurrent/looped updates to a counter are wrong. Typing catches
   state-key mistakes at mypy time.
@@ -191,7 +191,7 @@ measurement, the numbers come from the benchmark harness
 ## 12. LLM access: OpenRouter (model-agnostic router)
 
 - **Problem:** Access capable LLMs at zero/low cost without locking to one vendor.
-- **Alternatives:** direct OpenAI/Anthropic (paid), a single hosted OSS model,
+- **Alternatives:** direct vendor APIs, e.g. OpenAI (paid), a single hosted OSS model,
   OpenRouter.
 - **Chosen:** OpenRouter via the OpenAI SDK (`src/utils/llm_client.py`), one key
   for many models. System messages are normalized into the first user turn because

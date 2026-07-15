@@ -2,13 +2,13 @@
 
 Append-only journal of work on FinSight AI. Newest entries on top. Each entry:
 what changed, why, and how it was verified. Companion to TODO.md (the backlog) and
-CLAUDE.md (the standing rules).
+ENGINEERING_GUIDE.md (the standing rules).
 
 ---
 
 ## 2026-07-15 — v1.0.0 release preparation
 
-**Author:** Claude (Opus 4.8). Final release pass — no new features; docs,
+**Author:** Manoj Mareedu. Final release pass — no new features; docs,
 evidence, and release readiness only.
 
 ### Verified (fresh, no assumptions)
@@ -32,7 +32,7 @@ documented, not a retrieval fault.
   decision (problem / alternatives / choice / tradeoffs / evidence / why).
 - `docs/RELEASE_CHECKLIST.md` — status, limitations, tradeoffs, roadmap,
   reproducibility, verification checklist, benchmark + deployment summary.
-- CLAUDE.md — OpenRouter primary provider + quota note, Ollama optional fallback,
+- ENGINEERING_GUIDE.md — OpenRouter primary provider + quota note, Ollama optional fallback,
   DoD extended with benchmark/docker gates.
 - README — Documentation section, `src/evaluation/` + `docs/` in the structure
   tree, refreshed benchmark headline.
@@ -45,7 +45,7 @@ no dead code / TODO-FIXME in `src`; deps match pins (`pip check` OK).
 
 ## 2026-07-15 — Final engineering loop: comprehensive benchmark + evidence
 
-**Author:** Claude (Opus 4.8). Goal: production-quality repo with objective,
+**Author:** Manoj Mareedu. Goal: production-quality repo with objective,
 reproducible evidence. No new product features.
 
 ### Verified current state (all green)
@@ -90,7 +90,7 @@ Note: a local-gemma benchmark run was abandoned — RAGAS at k=8 on gemma is
 the stronger judge. Deterministic retrieval metrics are judge-independent.
 
 ### Docs synced to implementation
-CLAUDE.md (§2 similarity k=8 + benchmark module; §3 make targets; §6 RAGAS/pinning
+ENGINEERING_GUIDE.md (§2 similarity k=8 + benchmark module; §3 make targets; §6 RAGAS/pinning
 resolution; removed stale README-drift note). README: new "Evaluation & Benchmarks"
 section (before/after table, reproduce steps, latest-run headline, honest caveats);
 corrected stale "tests are minimal" constraint. `make benchmark` target added.
@@ -99,7 +99,7 @@ corrected stale "tests are minimal" constraint. `make benchmark` target added.
 
 ## 2026-07-15 — Retrieval-quality optimization (benchmark-validated)
 
-**Author:** Claude (Opus 4.8). Scope: retrieval quality only (chunking, metadata,
+**Author:** Manoj Mareedu. Scope: retrieval quality only (chunking, metadata,
 retrieval params, prompt grounding) — no new features. Every change validated by
 objective benchmark metrics; non-improving changes reverted.
 
@@ -164,7 +164,7 @@ context_precision 0.1111, context_recall 0.3333, answer_relevancy 0.1969.)
 
 ## 2026-07-14 — RAGAS all-NaN: root-cause analysis + fix + successful rerun
 
-**Author:** Claude (Opus 4.8). Task: investigate why RAGAS returned NaN for every
+**Author:** Manoj Mareedu. Task: investigate why RAGAS returned NaN for every
 metric, as a pipeline failure. Verified each stage with runtime evidence.
 
 ### Evidence gathered (per stage)
@@ -239,7 +239,7 @@ metric, as a pipeline failure. Verified each stage with runtime evidence.
 
 ## 2026-07-14 — P2-1/2 + P2-4 (partial); P2-3 deferred
 
-**Author:** Claude (Opus 4.8), autonomous execution loop.
+**Author:** Manoj Mareedu.
 
 - **P2-1:** removed the stray committed `apple_report.pdf` (generated output,
   referenced nowhere); hardened `.gitignore` (`*.pdf`, tool caches). **Kept
@@ -266,7 +266,7 @@ metric, as a pipeline failure. Verified each stage with runtime evidence.
 
 ## 2026-07-14 — P1-5: de-hardwire RAGAS judge + make eval a real gate
 
-**Author:** Claude (Opus 4.8), autonomous execution loop.
+**Author:** Manoj Mareedu.
 
 - Root cause: `ragas_eval.py` hardwired `ChatOllama("llama3.2")` and printed
   PASS/FAIL but always exited 0 — it could neither run without a specific local
@@ -287,7 +287,7 @@ metric, as a pipeline failure. Verified each stage with runtime evidence.
 
 ## 2026-07-14 — P1-3/4/6/7/8: schema de-dup, config/doc accuracy, LICENSE, compose
 
-**Author:** Claude (Opus 4.8), autonomous execution loop.
+**Author:** Manoj Mareedu.
 
 - **P1-3:** removed the duplicate `AnalyzeRequest`/`AnalyzeResponse` from
   `api/routes/analyze.py`; it now imports the canonical models from
@@ -314,7 +314,7 @@ metric, as a pipeline failure. Verified each stage with runtime evidence.
 
 ## 2026-07-14 — P1-2: establish real test coverage
 
-**Author:** Claude (Opus 4.8), autonomous execution loop.
+**Author:** Manoj Mareedu.
 
 - Added 30 network-free unit tests across four files; suite went **1 → 31 passing**.
   Everything external (HTTP to EDGAR, the LLM `chat` call) is mocked, so tests are
@@ -339,7 +339,7 @@ P1-5/CI hardening.
 
 ## 2026-07-14 — Fix P0 batch (CI red, RAG path bug, Docker healthcheck) + resolve P1-1
 
-**Author:** Claude (Opus 4.8), autonomous execution loop.
+**Author:** Manoj Mareedu.
 
 ### Baseline (verified before changing anything, via `.venv/bin/python -m <tool>`)
 - **Correction to the prior audit:** the venv is **not** broken for running gates.
@@ -389,13 +389,13 @@ P1-2 (real test coverage) — also lets the pure-logic fixes above be regression
 
 ## 2026-07-14 — Repository management system initialized + full audit
 
-**Author:** Claude (Opus 4.8), at Manoj's request.
+**Author:** Manoj Mareedu.
 
 ### What was done
-- Created the repository management system: **CLAUDE.md**, **TODO.md**,
+- Created the repository management system: **ENGINEERING_GUIDE.md**, **TODO.md**,
   **WORKLOG.md** (this file). No prior versions existed.
 - Adopted an industry-standard engineering-standards + Definition of Done set in
-  CLAUDE.md, because no explicit standards/DoD were supplied with the request.
+  ENGINEERING_GUIDE.md, because no explicit standards/DoD were supplied with the request.
   **This is flagged for the owner to confirm or replace.**
 - Performed a full read-through of the codebase (all `src/` modules, tests, Docker,
   CI, config, README) and ran the quality gates that could run.
@@ -450,4 +450,4 @@ P1-2 (real test coverage) — also lets the pure-logic fixes above be regression
 
 ### Open question for the owner
 - Confirm or replace the engineering standards / Definition of Done drafted in
-  CLAUDE.md §4–5 (none were provided with the initial request).
+  ENGINEERING_GUIDE.md §4–5 (none were provided with the initial request).

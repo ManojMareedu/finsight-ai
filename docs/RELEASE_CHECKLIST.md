@@ -32,7 +32,7 @@ scope, how to verify it, and how to reproduce every claim.
   Docker `HEALTHCHECK` healthy. Live demo on HuggingFace Spaces.
 
 **Documentation**
-- `README.md`, `CLAUDE.md` (agent/engineering guide), `docs/ENGINEERING_DECISIONS.md`
+- `README.md`, `ENGINEERING_GUIDE.md` (agent/engineering guide), `docs/ENGINEERING_DECISIONS.md`
   (interview-grade rationale), `WORKLOG.md` (dated decision trail), `TODO.md`.
 
 ## 📊 Benchmark summary (v1.0.0)
@@ -104,7 +104,7 @@ docker compose up --build      # full stack (UI :7860, API :8000/docs)
 - [x] container serves `/health` → `{"status":"ok"}`, `HEALTHCHECK` healthy
 - [x] `make eval` produces a real (non-NaN) result
 - [x] `make benchmark` completes and writes JSON + Markdown
-- [x] README / CLAUDE / ENGINEERING_DECISIONS synchronized with code
+- [x] README / ENGINEERING_GUIDE / ENGINEERING_DECISIONS synchronized with code
 - [x] every major claim has evidence (tests / benchmark / CI / live demo / schema)
 
 ## 🚀 Deployment summary

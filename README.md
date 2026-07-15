@@ -306,7 +306,7 @@ deterministic metrics are the high-confidence signal and RAGAS is supplementary.
   decision was made (problem, alternatives, tradeoffs, evidence). Interview-grade.
 - [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) — release status,
   limitations, tradeoffs, and a reproducibility guide.
-- [`CLAUDE.md`](CLAUDE.md) — engineering standards, architecture, and Definition of Done.
+- [`ENGINEERING_GUIDE.md`](ENGINEERING_GUIDE.md) — engineering standards, architecture, and Definition of Done.
 - [`WORKLOG.md`](WORKLOG.md) — dated engineering journal.
 
 ---

@@ -42,7 +42,7 @@ non-blocking future work: P2-3 (deferred — architecture), P2-4 remainder, P2-5
   `ruff`, and `pytest` all run via `.venv/bin/python -m <tool>`. Only the
   console-script shebangs are stale (they point at an old space-containing path).
   Recreating as 3.11 is impossible here (`python3.11` is not installed; the venv is
-  3.12) and would destroy working infra, so it was **not** recreated. CLAUDE.md §3
+  3.12) and would destroy working infra, so it was **not** recreated. ENGINEERING_GUIDE.md §3
   already prescribes the `python -m` invocation. mypy targets 3.11 semantics via
   config regardless of the 3.12 interpreter.
 
@@ -177,6 +177,6 @@ non-blocking future work: P2-3 (deferred — architecture), P2-4 remainder, P2-5
 ---
 
 ### Notes
-- The Definition of Done and quality-gate commands live in **CLAUDE.md** §4–5.
+- The Definition of Done and quality-gate commands live in **ENGINEERING_GUIDE.md** §4–5.
 - P1-1 (fix venv) is a practical prerequisite for confidently closing anything
   that must pass `mypy`/`black` locally.

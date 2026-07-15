@@ -1,12 +1,12 @@
-# CLAUDE.md
+# Engineering Guide
 
-Operating guide for AI agents (and humans) working in this repository. Read this
+Engineering guide for this repository. Read this
 first. It defines what the project is, how it is built, the engineering standards
 we hold code to, and the Definition of Done every change must meet before it is
 considered complete.
 
 > The management system for this repo is three files:
-> - **CLAUDE.md** (this file) — standing rules, architecture, commands, DoD.
+> - **ENGINEERING_GUIDE.md** (this file) — standing rules, architecture, commands, DoD.
 > - **TODO.md** — the prioritized backlog. Source of truth for "what's next".
 > - **WORKLOG.md** — append-only journal of what was done, when, and why.
 >
@@ -136,7 +136,7 @@ A change is **Done** only when all of the following hold:
 - [ ] `pytest` passes, and new/changed behavior has tests.
 - [ ] No secrets, keys, or large binaries added to git.
 - [ ] Config/paths/models read from `config.py`, not hardcoded.
-- [ ] README and CLAUDE.md updated if behavior/structure/contract changed.
+- [ ] README and ENGINEERING_GUIDE.md updated if behavior/structure/contract changed.
 - [ ] TODO.md updated (item checked off or follow-ups added).
 - [ ] A WORKLOG.md entry appended describing what changed and why.
 - [ ] CI is expected to pass (the same gates run there).
@@ -166,7 +166,7 @@ Still live:
   long-running server must pick up daily SEC ticker updates, restart it (or add
   TTL). Reference data changes slowly, so this is acceptable today.
 
-## 7. Conventions for agents
+## 7. Conventions
 
 - The EDGAR migration is intentional — do not re-add yfinance. Financial figures
   come from EDGAR XBRL (`get_financials_from_edgar`), not the 10-K text; RAG
