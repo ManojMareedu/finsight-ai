@@ -1,10 +1,10 @@
 # FinSight AI — Benchmark Report
 
-- **Generated:** 2026-07-15T10:03:22.405473+00:00
+- **Generated:** 2026-07-15T12:15:35.729904+00:00
 - **Questions:** 10
 - **Judge:** `openrouter` / `openai/gpt-oss-20b:free`
 - **Answer model:** `openrouter/free`
-- **RAGAS samples:** 3 (deterministic metrics cover all 10)
+- **RAGAS samples:** 10 (deterministic metrics cover all 10)
 
 ## Results
 
@@ -13,13 +13,13 @@
 | Retrieval Precision@8 | 1.0000 |
 | Retrieval Recall | 0.7942 |
 | Success Rate | 1.0000 (10/10) |
-| Latency total (mean) | 17.5738s |
-| Latency total (p95) | 50.5876s |
-| Latency retrieval (mean) | 0.7239s |
-| RAGAS Faithfulness | 0.8333 |
-| RAGAS Answer Relevancy | 0.5372 |
+| Latency total (mean) | 17.4395s |
+| Latency total (p95) | 33.3687s |
+| Latency retrieval (mean) | 0.6450s |
+| RAGAS Faithfulness | 0.9296 |
+| RAGAS Answer Relevancy | 0.7315 |
 | RAGAS Context Precision | n/a |
-| RAGAS Context Recall | 0.3333 |
+| RAGAS Context Recall | 0.3000 |
 
 ## Metric definitions
 
@@ -27,7 +27,7 @@
 - **Measures:** Fraction of the top-k retrieved chunks that belong to the company the question is about (chunk `company` metadata == target).
 - **Why it matters:** Cross-company contamination directly degrades answer grounding; this is the cleanest objective signal of retrieval precision.
 - **Acceptable:** >= 0.90 is good for this 3-company corpus.
-- **Limitations:** Company-level, not passage-level relevance; a right-company but off-topic chunk still counts as a hit.
+- **Limitations:** Company-level, not passage-level relevance (a right-company but off-topic chunk still counts). ChromaDB uses approximate NN search (HNSW), so this varies ~+/-0.02 run-to-run (observed 0.975-1.000).
 
 ### retrieval_recall
 - **Measures:** Mean fraction of ground-truth content words present in the concatenated retrieved chunks (keyword-overlap proxy).
