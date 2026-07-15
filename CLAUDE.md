@@ -42,7 +42,8 @@ POST /analyze  ──►  LangGraph workflow (src/graph/workflow.py)
   + financial metrics from **SEC EDGAR** (via `get_stock_info` → EDGAR XBRL, *not*
   yfinance despite the stale docstring). Emits `iterations: 1`.
 - **filing_agent** (`src/agents/filing_agent.py`) — on-demand SEC 10-K ingestion
-  into ChromaDB, then multi-query MMR retrieval.
+  into ChromaDB (150k chars), then multi-query similarity retrieval (k=8).
+  Retrieval params are benchmark-tuned (WORKLOG 2026-07-15).
 - **risk_agent** (`src/agents/risk_agent.py`) — LLM extracts 3–6 risks, derives a
   0–1 `risk_score` from a severity-weighted average.
 - **synthesis_agent** (`src/agents/synthesis_agent.py`) — `structured_chat`
@@ -54,11 +55,9 @@ reducer on `iterations`), `src/models/schemas.py` (Pydantic v2 report schema),
 `src/utils/` (config, EDGAR data fetchers, OpenRouter LLM client, PDF), `src/rag/`
 (ingestion, retriever, local sentence-transformers embeddings),
 `src/observability/tracer.py` (Langfuse), `src/api/` (FastAPI app + routes),
-`src/ui/app.py` (Streamlit), `src/evaluation/ragas_eval.py` (RAGAS, Ollama-backed).
-
-**Note:** The README's "Repository Structure" section has drifted from reality
-(it references `docker/docker-compose.yml` and describes yfinance usage that no
-longer exists). Trust the source and this file over the README.
+`src/ui/app.py` (Streamlit), `src/evaluation/ragas_eval.py` (RAGAS quality gate)
+and `src/evaluation/benchmark.py` (comprehensive retrieval + RAG benchmark →
+`evaluation/results/`).
 
 ## 3. Commands
 
@@ -75,9 +74,11 @@ make run-ui         # streamlit run src/ui/app.py
 bash start.sh       # both, as in the container
 
 # Quality gates (must all pass — this is the DoD gate)
-make lint           # ruff check src && black --check src && mypy src
+make lint           # ruff check src tests && black --check src tests && mypy src
 make test           # pytest tests/ -v
-make eval           # RAGAS (requires local Ollama running llama3.2 + ingested ChromaDB)
+make eval           # RAGAS quality gate (judge via RAGAS_JUDGE_PROVIDER: openrouter
+                    #   default, or ollama local via /v1). Needs an ingested ChromaDB.
+make benchmark      # full retrieval+RAG benchmark → evaluation/results/{json,md}
 
 # Prefer invoking tools via the venv python if console-script shebangs are broken:
 .venv/bin/python -m pytest
@@ -128,11 +129,15 @@ A change is **Done** only when all of the following hold:
 
 ## 6. Known landmines (see TODO.md for full backlog)
 
-Resolved 2026-07-14 (kept here as history — all verified fixed):
+Resolved (kept here as history — all verified fixed):
 - ~~`retriever.py` hardcoded `./data/chroma`~~ → now reads `CHROMA_PERSIST_DIR`.
 - ~~`Dockerfile` HEALTHCHECK probed `/api/v1/health`~~ → now `/health`.
 - ~~CI red on `ruff`~~ → clean; CI also runs `black --check` + `mypy` + tests.
-- ~~Test coverage ≈ zero~~ → 33 network-free tests.
+- ~~Test coverage ≈ zero~~ → 42 network-free tests.
+- ~~RAGAS returned all-NaN~~ → root-caused (dependency drift, judge path, silent
+  NaN) and fixed; `langchain-core` now pinned `>=0.3.15,<0.4` to prevent drift.
+  Local RAGAS judge goes through Ollama `/v1` (ChatOpenAI), not `ChatOllama`.
+- ~~Retrieval used MMR (k=6)~~ → benchmark-tuned to similarity k=8 + 150k ingestion.
 
 Still live:
 - `.venv` mypy/black console-script shebangs are stale (built at an old
@@ -145,8 +150,9 @@ Still live:
 
 ## 7. Conventions for agents
 
-- Do not "fix" the yfinance references by re-adding yfinance — the EDGAR migration
-  is intentional; fix the stale docstring instead.
+- The EDGAR migration is intentional — do not re-add yfinance. Financial figures
+  come from EDGAR XBRL (`get_financials_from_edgar`), not the 10-K text; RAG
+  retrieval is for qualitative content only.
 - When touching the graph state, remember `iterations` uses an `add` reducer:
   return `{"iterations": 1}` to increment, never a running total.
 - Keep the four-agent contract intact: each node returns a partial state dict.

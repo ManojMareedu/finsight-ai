@@ -15,3 +15,8 @@ lint:
 
 eval:
 	python -m src.evaluation.ragas_eval
+
+benchmark:
+	python -m src.evaluation.benchmark
+
+.PHONY: install run-api run-ui test lint eval benchmark
