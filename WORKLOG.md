@@ -6,6 +6,55 @@ CLAUDE.md (the standing rules).
 
 ---
 
+## 2026-07-15 — Final engineering loop: comprehensive benchmark + evidence
+
+**Author:** Claude (Opus 4.8). Goal: production-quality repo with objective,
+reproducible evidence. No new product features.
+
+### Verified current state (all green)
+ruff / black / mypy clean; 42 tests pass; `pip check` OK; deps match pins
+(`langchain-core 0.3.63`); no dead code (`ruff --select F`), no TODO/FIXME in
+`src`, no duplicated schemas, `.env` untracked, no leaked secrets, LICENSE present.
+FastAPI `/health` → 200, `/docs` → 200, OpenAPI paths `[/health, /analyze]`.
+HF frontmatter correct (`sdk: docker`, `app_port: 7860`); Dockerfile healthcheck
+`/health`. **Docker build not runnable here** (daemon down) — CI (`docker/Dockerfile.ui`)
+and the live HF Space are the build/deploy evidence.
+
+### Added — comprehensive benchmark (`src/evaluation/benchmark.py`, `make benchmark`)
+Deterministic metrics (no LLM, cover **all** questions): retrieval precision@k,
+retrieval recall, latency mean/p95, success rate. RAGAS metrics (capped, judge):
+faithfulness, answer relevancy, context precision/recall — NaN-tolerant (a metric
+the judge can't score is `null`, not a crash or a zero). Writes timestamped JSON +
+Markdown to `evaluation/results/` with per-metric documentation (what / why /
+acceptable / limitations). 9 new network-free tests.
+
+### Benchmark result — strongest free judge (`openai/gpt-oss-20b:free`, N=10)
+`evaluation/results/benchmark_latest.md`:
+
+| Metric | Value |
+|---|---|
+| Retrieval Precision@8 | **1.0000** |
+| Retrieval Recall | 0.7942 |
+| Success Rate | 1.0000 (10/10) |
+| Latency total mean / p95 | 17.57s / 50.57s |
+| Latency retrieval mean | 0.72s |
+| RAGAS Faithfulness | 0.8333 |
+| RAGAS Answer Relevancy | 0.5372 |
+| RAGAS Context Recall | 0.3333 |
+| RAGAS Context Precision | null (parse-fragile on free judge) |
+
+Note: a local-gemma benchmark run was abandoned — RAGAS at k=8 on gemma is
+~130s/iteration (impractical); gpt-oss (hosted) completes in ~10s/iteration and is
+the stronger judge. Deterministic retrieval metrics are judge-independent.
+
+### Docs synced to implementation
+CLAUDE.md (§2 similarity k=8 + benchmark module; §3 make targets; §6 RAGAS/pinning
+resolution; removed stale README-drift note). README: new "Evaluation & Benchmarks"
+section (before/after table, reproduce steps, latest-run headline, honest caveats);
+corrected stale "tests are minimal" constraint. `make benchmark` target added.
+
+---
+
 ## 2026-07-15 — Retrieval-quality optimization (benchmark-validated)
 
 **Author:** Claude (Opus 4.8). Scope: retrieval quality only (chunking, metadata,
