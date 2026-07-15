@@ -54,8 +54,9 @@ METRIC_DOCS: dict[str, dict[str, str]] = {
         "why": "Cross-company contamination directly degrades answer grounding; "
         "this is the cleanest objective signal of retrieval precision.",
         "acceptable": ">= 0.90 is good for this 3-company corpus.",
-        "limits": "Company-level, not passage-level relevance; a right-company "
-        "but off-topic chunk still counts as a hit.",
+        "limits": "Company-level, not passage-level relevance (a right-company but "
+        "off-topic chunk still counts). ChromaDB uses approximate NN search (HNSW), "
+        "so this varies ~+/-0.02 run-to-run (observed 0.975-1.000).",
     },
     "retrieval_recall": {
         "measures": "Mean fraction of ground-truth content words present in the "
