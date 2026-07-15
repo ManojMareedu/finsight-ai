@@ -7,9 +7,12 @@ follow-ups you discover as new items.
 Legend: **P0** = broken / blocking · **P1** = correctness, debt, must-do-soon ·
 **P2** = hygiene, enhancements, roadmap.
 
-Last reviewed: **2026-07-14** (see WORKLOG entries 2026-07-14). **Status:** all P0
-+ P1 resolved and verified; P2-1/2/4(partial) done. Remaining: P2-3 (deferred —
-architecture decision), P2-4 remainder, P2-5 (roadmap features), P1-5b.
+Last reviewed: **2026-07-15** (v1.0.0 release prep). **Status:** all P0 + P1
+resolved and verified; retrieval optimized (R1) and benchmarked (R2); Docker
+build + deploy verified (R3); release docs (ENGINEERING_DECISIONS, RELEASE_CHECKLIST)
+written; full-set benchmark green. **Repo is release-ready (v1.0.0).** Remaining are
+non-blocking future work: P2-3 (deferred — architecture), P2-4 remainder, P2-5
+(roadmap), P1-5b (eval-in-CI).
 
 ---
 
