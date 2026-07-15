@@ -8,6 +8,11 @@ data/
 # Generated report artifacts (the app returns PDFs via API/UI, not to the repo)
 *.pdf
 
+# Timestamped benchmark snapshots are reproducible via `make benchmark`; only the
+# canonical evaluation/results/benchmark_latest.{json,md} are committed as evidence.
+evaluation/results/benchmark_2*.json
+evaluation/results/benchmark_2*.md
+
 # Tool caches
 .mypy_cache/
 .pytest_cache/

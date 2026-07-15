@@ -234,6 +234,56 @@ The retriever originally used MMR (Maximal Marginal Relevance), which trades som
 
 ---
 
+## Evaluation & Benchmarks
+
+Retrieval and generation quality are measured, not asserted. The benchmark suite
+(`src/evaluation/benchmark.py`) reports two metric families over a 10-question
+golden set built from real Apple / Microsoft / Tesla 10-Ks:
+
+- **Deterministic** (no LLM, unlimited, reproducible): retrieval precision@k,
+  retrieval recall, latency (mean / p95), success rate.
+- **RAGAS** (LLM-judged): faithfulness, answer relevancy, context precision,
+  context recall.
+
+Every metric is documented in the generated report — *what it measures, why it
+matters, an acceptable range, and its limitations* — so the numbers are
+interpretable without reading the code.
+
+**Latest run** (judge `openai/gpt-oss-20b:free`, 10 questions; full report:
+[`evaluation/results/benchmark_latest.md`](evaluation/results/benchmark_latest.md)):
+
+| Retrieval Precision@8 | Retrieval Recall | Success Rate | Latency p95 | Faithfulness | Answer Relevancy |
+|---|---|---|---|---|---|
+| 1.00 | 0.79 | 10/10 | 50.6s | 0.83 | 0.54 |
+
+(`context_precision` came back `null` — RAGAS's most parse-fragile metric failed on
+the free judge; reported honestly rather than as a zero.)
+
+**Retrieval optimization was benchmark-driven.** The retriever and ingestion
+settings were tuned by rerunning the benchmark and keeping only changes that moved
+the objective metrics; non-improving changes were reverted:
+
+| Change | company / precision@k | keyword recall |
+|---|---|---|
+| Baseline (MMR k=6, λ=0.7, 50k ingest) | 0.8167 | 0.6081 |
+| → similarity k=8 | 0.9125 | 0.7061 |
+| → + 150k ingestion (**shipped**) | **0.9625** | **0.7942** |
+| Reverted: chunk 500, or 300k ingest | worse / no gain | — |
+
+Reproduce (deterministic metrics need no LLM; RAGAS needs a judge):
+
+```bash
+make benchmark                                   # strongest free judge (OpenRouter)
+RAGAS_JUDGE_PROVIDER=ollama make benchmark       # fully local via Ollama /v1
+```
+
+Reports land in [`evaluation/results/`](evaluation/results/) as timestamped JSON +
+Markdown (`benchmark_latest.md` is the newest). **Caveat:** RAGAS scores depend on
+the judge; free judges are noisy and `context_precision` is parse-fragile, so the
+deterministic metrics are the high-confidence signal and RAGAS is supplementary.
+
+---
+
 ## Data Sources
 
 All data is free, official, and requires no API keys except where noted.
@@ -341,10 +391,15 @@ HuggingFace Spaces runs the container permanently on free CPU hardware with no s
 
 ## Known Constraints
 
-- Automated tests are minimal (tests/test_smoke.py only)
-- The retriever reads ChromaDB from ./data/chroma — keep persistence path consistent with ingestion settings
-- Tavily web search is best-effort and gracefully skipped if the API key is missing
-- Free LLMs on OpenRouter can be slow under load — typical analysis takes 45-135 seconds depending on model availability
+- The golden evaluation set is small (10 questions across 3 companies) — enough to
+  drive retrieval tuning, but RAGAS scores on it are noisy on free judges; treat
+  the deterministic retrieval metrics as the reliable signal.
+- Exact financial figures (revenue, margins) come from EDGAR XBRL, **not** RAG over
+  the 10-K text — so numeric questions are answered by the data path, not retrieval.
+- Tavily web search is best-effort and gracefully skipped if the API key is missing.
+- Free LLMs on OpenRouter can be slow under load and are capped at ~50 requests/day
+  on the free tier — a full RAGAS run may need the local Ollama judge or a cap
+  (`RAGAS_MAX_SAMPLES`). Typical analysis takes 45–135 seconds.
 
 
 ## Author
