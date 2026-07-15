@@ -21,5 +21,3 @@ evaluation/results/benchmark_2*.md
 # macOS Finder metadata
 .DS_Store
 src/.DS_Store
-# Local AI-tooling guide (not part of the public project)
-CLAUDE.md
