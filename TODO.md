@@ -85,6 +85,18 @@ architecture decision), P2-4 remainder, P2-5 (roadmap features), P1-5b.
   `ragas_max_samples`. Rerun computes all 4 metrics (no NaN); results in
   `evaluation/results/latest.json` (N=3 local run). Commit 307de80.
 
+- [x] **R2 · Comprehensive benchmark harness — DONE 2026-07-15.**
+  `src/evaluation/benchmark.py` (`make benchmark`): deterministic retrieval
+  precision@k / recall / latency (mean,p95) / success rate over all questions +
+  RAGAS (capped), with per-metric documentation, writing timestamped JSON+MD to
+  `evaluation/results/`. Latest gpt-oss run: precision@8 1.0, recall 0.79, success
+  10/10, faithfulness 0.83. Commits 118ad33, 7bcf3aa. See WORKLOG 2026-07-15.
+
+- [ ] **R3 · Docker build not verifiable locally.** The Docker daemon is down in
+  this environment, so `docker build` can't be exercised here. Build/deploy evidence
+  is CI (`docker/Dockerfile.ui`) + the live HF Space. Re-verify the root `Dockerfile`
+  builds when a daemon is available.
+
 - [x] **R1 · Retrieval-quality optimization — DONE 2026-07-15.** Benchmark-validated
   via a deterministic golden-set diagnostic + RAGAS. Kept: retriever
   MMR(k6,fetch_k20,λ0.7) → similarity(k8); ingestion max_chars 50k → 150k. Reverted
