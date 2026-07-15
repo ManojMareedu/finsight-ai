@@ -6,6 +6,43 @@ CLAUDE.md (the standing rules).
 
 ---
 
+## 2026-07-15 — v1.0.0 release preparation
+
+**Author:** Claude (Opus 4.8). Final release pass — no new features; docs,
+evidence, and release readiness only.
+
+### Verified (fresh, no assumptions)
+ruff / black / mypy clean; 42 tests pass. OpenRouter account is now **beyond
+free-tier** (`is_free_tier: false`, ~1,000 req/day) — so the final benchmark ran
+RAGAS on **all 10** questions, not a cap. `git ls-remote origin` works (osxkeychain
+credential); `gh` not installed (release handled via git tag + provided command).
+
+### Final benchmark (OpenRouter `gpt-oss-20b:free`, N=10, all RAGAS-scored)
+`evaluation/results/benchmark_latest.md`:
+Precision@8 **1.00**, Recall **0.79**, Success **10/10**, latency mean/p95
+**17.4s / 33.4s**, Faithfulness **0.93**, Answer Relevancy **0.73**,
+Context Recall 0.30, Context Precision `null`. Quality **improved** vs the earlier
+N=3 run (faithfulness 0.83→0.93, answer-relevancy 0.54→0.73) — no regression.
+Context recall/precision are depressed by the structured-vs-narrative data model
+(numeric answers live in XBRL, not the 10-K text) + RAGAS parse fragility, both
+documented, not a retrieval fault.
+
+### Created / updated
+- `docs/ENGINEERING_DECISIONS.md` — interview-grade rationale for every major
+  decision (problem / alternatives / choice / tradeoffs / evidence / why).
+- `docs/RELEASE_CHECKLIST.md` — status, limitations, tradeoffs, roadmap,
+  reproducibility, verification checklist, benchmark + deployment summary.
+- CLAUDE.md — OpenRouter primary provider + quota note, Ollama optional fallback,
+  DoD extended with benchmark/docker gates.
+- README — Documentation section, `src/evaluation/` + `docs/` in the structure
+  tree, refreshed benchmark headline.
+
+### Audit (clean)
+No broken internal links; all `make` targets exist; README structure paths exist;
+no dead code / TODO-FIXME in `src`; deps match pins (`pip check` OK).
+
+---
+
 ## 2026-07-15 — Final engineering loop: comprehensive benchmark + evidence
 
 **Author:** Claude (Opus 4.8). Goal: production-quality repo with objective,
