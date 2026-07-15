@@ -254,10 +254,12 @@ interpretable without reading the code.
 
 | Retrieval Precision@8 | Retrieval Recall | Success Rate | Latency p95 | Faithfulness | Answer Relevancy |
 |---|---|---|---|---|---|
-| 1.00 | 0.79 | 10/10 | 50.6s | 0.83 | 0.54 |
+| 1.00* | 0.79 | 10/10 | 50.6s | 0.83 | 0.54 |
 
-(`context_precision` came back `null` — RAGAS's most parse-fragile metric failed on
-the free judge; reported honestly rather than as a zero.)
+*Retrieval precision varies ~0.975–1.00 across runs — ChromaDB's HNSW index is
+approximate nearest-neighbor, not exact. `context_precision` came back `null` —
+RAGAS's most parse-fragile metric failed on the free judge; reported honestly
+rather than as a zero.
 
 **Retrieval optimization was benchmark-driven.** The retriever and ingestion
 settings were tuned by rerunning the benchmark and keeping only changes that moved
@@ -267,8 +269,11 @@ the objective metrics; non-improving changes were reverted:
 |---|---|---|
 | Baseline (MMR k=6, λ=0.7, 50k ingest) | 0.8167 | 0.6081 |
 | → similarity k=8 | 0.9125 | 0.7061 |
-| → + 150k ingestion (**shipped**) | **0.9625** | **0.7942** |
+| → + 150k ingestion (**shipped**) | **0.96–1.00** | **0.78–0.79** |
 | Reverted: chunk 500, or 300k ingest | worse / no gain | — |
+
+Retrieval numbers carry ~±0.02 run-to-run variance (approximate HNSW index); the
+baseline→shipped improvement is well outside that band.
 
 Reproduce (deterministic metrics need no LLM; RAGAS needs a judge):
 
