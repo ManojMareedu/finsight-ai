@@ -27,11 +27,6 @@ logger = logging.getLogger(__name__)
 # this coverage the metric is reported as null with its coverage, not averaged.
 MIN_COVERAGE = 0.8
 
-# Thresholds for the two context metrics. Kept here rather than in Settings
-# because config.py is outside this change; move them there when convenient.
-CONTEXT_PRECISION_MIN = get_settings().ragas_context_precision_min
-CONTEXT_RECALL_MIN = get_settings().ragas_context_recall_min
-
 
 def score_with_coverage(values: list) -> dict:
     """Mean of the rows the judge actually scored, plus the denominator.
@@ -235,8 +230,8 @@ def run_evaluation() -> dict:
     mins = {
         "faithfulness": settings.ragas_faithfulness_min,
         "answer_relevancy": settings.ragas_answer_relevancy_min,
-        "context_precision": CONTEXT_PRECISION_MIN,
-        "context_recall": CONTEXT_RECALL_MIN,
+        "context_precision": settings.ragas_context_precision_min,
+        "context_recall": settings.ragas_context_recall_min,
     }
     result["passed"] = all(
         metrics[k]["value"] is not None and metrics[k]["value"] >= floor
@@ -259,8 +254,8 @@ if __name__ == "__main__":
     mins = {
         "faithfulness": settings.ragas_faithfulness_min,
         "answer_relevancy": settings.ragas_answer_relevancy_min,
-        "context_precision": CONTEXT_PRECISION_MIN,
-        "context_recall": CONTEXT_RECALL_MIN,
+        "context_precision": settings.ragas_context_precision_min,
+        "context_recall": settings.ragas_context_recall_min,
     }
 
     print("\n" + "=" * 62)

@@ -32,6 +32,12 @@ jobs:
           mypy src
 
       - name: Run tests
+        # Settings requires an API key, deliberately: a deployment missing
+        # one should fail loudly at startup rather than at the provider.
+        # Every test mocks its LLM and network calls, so this value is
+        # never used to reach anything.
+        env:
+          OPENROUTER_API_KEY: ci-not-a-real-key
         run: |
           pytest
 

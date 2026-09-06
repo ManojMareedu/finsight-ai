@@ -11,8 +11,6 @@ from src.observability.logging import configure_logging, request_id_var
 from src.rag.embeddings import get_embeddings
 from src.utils.config import get_settings
 
-configure_logging(get_settings().log_level)
-
 logger = logging.getLogger(__name__)
 
 
@@ -42,13 +40,13 @@ def _check_single_worker() -> None:
         )
 
 
-_check_single_worker()
-
 app = FastAPI(title="FinSight AI", version="1.0.0")
 
 
 @app.on_event("startup")
-async def _warm_embeddings() -> None:
+async def _startup() -> None:
+    configure_logging(get_settings().log_level)
+    _check_single_worker()
     # T0-1: get_embeddings() lazily constructs a SentenceTransformer on first
     # call. Left alone, that first call happens inside a /health request —
     # a model load racing the Dockerfile's 10s HEALTHCHECK timeout on a cold

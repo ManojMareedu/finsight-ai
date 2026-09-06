@@ -69,5 +69,5 @@ def test_startup_warms_embeddings_before_any_probe(monkeypatch):
 
     calls = []
     monkeypatch.setattr(main_module, "get_embeddings", lambda: calls.append(1))
-    asyncio.run(main_module._warm_embeddings())
+    asyncio.run(main_module._startup())
     assert calls == [1]
