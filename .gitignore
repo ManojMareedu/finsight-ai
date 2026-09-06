@@ -12,6 +12,8 @@ data/
 # canonical evaluation/results/benchmark_latest.{json,md} are committed as evidence.
 evaluation/results/benchmark_2*.json
 evaluation/results/benchmark_2*.md
+evaluation/results/product_eval_2*.json
+evaluation/results/product_eval_2*.md
 
 # Tool caches
 .mypy_cache/
@@ -21,3 +23,6 @@ evaluation/results/benchmark_2*.md
 # macOS Finder metadata
 .DS_Store
 src/.DS_Store
+
+# Internal remediation audit — kept local
+audit/

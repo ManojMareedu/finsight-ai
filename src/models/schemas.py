@@ -19,6 +19,9 @@ class InvestmentSignal(str, Enum):
     HOLD = "HOLD"
     SELL = "SELL"
     STRONG_SELL = "STRONG_SELL"
+    # Not a verdict on the company: the system had no evidence and refused
+    # to rate it. Consumers must render this differently from HOLD.
+    INSUFFICIENT_DATA = "INSUFFICIENT_DATA"
 
 
 class RiskFactor(BaseModel):
@@ -48,6 +51,11 @@ class DueDiligenceReport(BaseModel):
     investment_signal: InvestmentSignal
     confidence_score: float = Field(ge=0.0, le=1.0)
     data_sources_used: list[str]
+    degraded: bool = Field(
+        default=False,
+        description="Set in code, not by the model: True if an agent fell back to "
+        "placeholder data instead of real analysis.",
+    )
     disclaimer: str = Field(
         default=(
             "This report is AI-generated based on the most recent SEC 10-K filing available. "

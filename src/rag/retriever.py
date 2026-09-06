@@ -1,14 +1,10 @@
-import os
-
-os.environ["ANONYMIZED_TELEMETRY"] = "False"
-
 from typing import Any, Dict, List, Optional
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 
+from src.rag.chroma_client import get_chroma_client
 from src.rag.embeddings import get_embeddings
-from src.utils.config import get_settings
 
 
 def get_retriever(company_filter: Optional[str] = None):
@@ -25,7 +21,7 @@ def get_retriever(company_filter: Optional[str] = None):
     """
 
     vectorstore = Chroma(
-        persist_directory=get_settings().chroma_persist_dir,
+        client=get_chroma_client(),
         embedding_function=get_embeddings(),
         collection_name="financial_filings",
     )

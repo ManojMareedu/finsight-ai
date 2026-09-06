@@ -1,0 +1,257 @@
+{
+  "pinned_at": "2026-09-05T12:00:44.099512+00:00",
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "max_filing_chars": 150000,
+  "companies": [
+    {
+      "company": "Apple",
+      "ticker": "AAPL",
+      "sector": "Technology",
+      "cik": "320193",
+      "form": "10-K",
+      "accession": "0000320193-25-000079",
+      "filing_date": "2025-10-31",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+    },
+    {
+      "company": "Microsoft",
+      "ticker": "MSFT",
+      "sector": "Technology",
+      "cik": "789019",
+      "form": "10-K",
+      "accession": "0001193125-26-323660",
+      "filing_date": "2026-07-29",
+      "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630.htm"
+    },
+    {
+      "company": "NVIDIA",
+      "ticker": "NVDA",
+      "sector": "Technology",
+      "cik": "1045810",
+      "form": "10-K",
+      "accession": "0001045810-26-000021",
+      "filing_date": "2026-02-25",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm"
+    },
+    {
+      "company": "Adobe",
+      "ticker": "ADBE",
+      "sector": "Technology",
+      "cik": "796343",
+      "form": "10-K",
+      "accession": "0000796343-26-000003",
+      "filing_date": "2026-01-15",
+      "url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000003/adbe-20251128.htm"
+    },
+    {
+      "company": "Tesla",
+      "ticker": "TSLA",
+      "sector": "Consumer Discretionary",
+      "cik": "1318605",
+      "form": "10-K",
+      "accession": "0001628280-26-003952",
+      "filing_date": "2026-01-29",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026003952/tsla-20251231.htm"
+    },
+    {
+      "company": "Crocs",
+      "ticker": "CROX",
+      "sector": "Consumer Discretionary",
+      "cik": "1334036",
+      "form": "10-K",
+      "accession": "0001334036-26-000006",
+      "filing_date": "2026-02-12",
+      "url": "https://www.sec.gov/Archives/edgar/data/1334036/000133403626000006/crox-20251231.htm"
+    },
+    {
+      "company": "Steven Madden",
+      "ticker": "SHOO",
+      "sector": "Consumer Discretionary",
+      "cik": "913241",
+      "form": "10-K",
+      "accession": "0001628280-26-012995",
+      "filing_date": "2026-03-02",
+      "url": "https://www.sec.gov/Archives/edgar/data/913241/000162828026012995/shoo-20251231.htm"
+    },
+    {
+      "company": "Rivian Automotive",
+      "ticker": "RIVN",
+      "sector": "Consumer Discretionary",
+      "cik": "1874178",
+      "form": "10-K",
+      "accession": "0001874178-26-000008",
+      "filing_date": "2026-02-12",
+      "url": "https://www.sec.gov/Archives/edgar/data/1874178/000187417826000008/rivn-20251231.htm"
+    },
+    {
+      "company": "Alphabet",
+      "ticker": "GOOGL",
+      "sector": "Communication Services",
+      "cik": "1652044",
+      "form": "10-K",
+      "accession": "0001652044-26-000018",
+      "filing_date": "2026-02-05",
+      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm"
+    },
+    {
+      "company": "Netflix",
+      "ticker": "NFLX",
+      "sector": "Communication Services",
+      "cik": "1065280",
+      "form": "10-K",
+      "accession": "0001065280-26-000034",
+      "filing_date": "2026-01-23",
+      "url": "https://www.sec.gov/Archives/edgar/data/1065280/000106528026000034/nflx-20251231.htm"
+    },
+    {
+      "company": "JPMorgan Chase",
+      "ticker": "JPM",
+      "sector": "Financials",
+      "cik": "19617",
+      "form": "10-K",
+      "accession": "0001628280-26-008131",
+      "filing_date": "2026-02-13",
+      "url": "https://www.sec.gov/Archives/edgar/data/19617/000162828026008131/jpm-20251231.htm"
+    },
+    {
+      "company": "Zions Bancorporation",
+      "ticker": "ZION",
+      "sector": "Financials",
+      "cik": "109380",
+      "form": "10-K",
+      "accession": "0000109380-26-000046",
+      "filing_date": "2026-02-24",
+      "url": "https://www.sec.gov/Archives/edgar/data/109380/000010938026000046/zions-20251231.htm"
+    },
+    {
+      "company": "Realty Income",
+      "ticker": "O",
+      "sector": "Real Estate",
+      "cik": "726728",
+      "form": "10-K",
+      "accession": "0000726728-26-000011",
+      "filing_date": "2026-02-25",
+      "url": "https://www.sec.gov/Archives/edgar/data/726728/000072672826000011/o-20251231.htm"
+    },
+    {
+      "company": "Prologis",
+      "ticker": "PLD",
+      "sector": "Real Estate",
+      "cik": "1045609",
+      "form": "10-K",
+      "accession": "0001193125-26-051453",
+      "filing_date": "2026-02-13",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045609/000119312526051453/pld-20251231.htm"
+    },
+    {
+      "company": "Johnson & Johnson",
+      "ticker": "JNJ",
+      "sector": "Health Care",
+      "cik": "200406",
+      "form": "10-K",
+      "accession": "0000200406-26-000016",
+      "filing_date": "2026-02-11",
+      "url": "https://www.sec.gov/Archives/edgar/data/200406/000020040626000016/jnj-20251228.htm"
+    },
+    {
+      "company": "Moderna",
+      "ticker": "MRNA",
+      "sector": "Health Care",
+      "cik": "1682852",
+      "form": "10-K",
+      "accession": "0001682852-26-000033",
+      "filing_date": "2026-02-20",
+      "url": "https://www.sec.gov/Archives/edgar/data/1682852/000168285226000033/mrna-20251231.htm"
+    },
+    {
+      "company": "ConocoPhillips",
+      "ticker": "COP",
+      "sector": "Energy",
+      "cik": "1163165",
+      "form": "10-K",
+      "accession": "0001163165-26-000009",
+      "filing_date": "2026-02-17",
+      "url": "https://www.sec.gov/Archives/edgar/data/1163165/000116316526000009/cop-20251231.htm"
+    },
+    {
+      "company": "Devon Energy",
+      "ticker": "DVN",
+      "sector": "Energy",
+      "cik": "1090012",
+      "form": "10-K",
+      "accession": "0001193125-26-056485",
+      "filing_date": "2026-02-18",
+      "url": "https://www.sec.gov/Archives/edgar/data/1090012/000119312526056485/dvn-20251231.htm"
+    },
+    {
+      "company": "Caterpillar",
+      "ticker": "CAT",
+      "sector": "Industrials",
+      "cik": "18230",
+      "form": "10-K",
+      "accession": "0000018230-26-000008",
+      "filing_date": "2026-02-13",
+      "url": "https://www.sec.gov/Archives/edgar/data/18230/000001823026000008/cat-20251231.htm"
+    },
+    {
+      "company": "Ryder System",
+      "ticker": "R",
+      "sector": "Industrials",
+      "cik": "85961",
+      "form": "10-K",
+      "accession": "0000085961-26-000007",
+      "filing_date": "2026-02-11",
+      "url": "https://www.sec.gov/Archives/edgar/data/85961/000008596126000007/r-20251231.htm"
+    },
+    {
+      "company": "Coca-Cola",
+      "ticker": "KO",
+      "sector": "Consumer Staples",
+      "cik": "21344",
+      "form": "10-K",
+      "accession": "0001628280-26-010047",
+      "filing_date": "2026-02-20",
+      "url": "https://www.sec.gov/Archives/edgar/data/21344/000162828026010047/ko-20251231.htm"
+    },
+    {
+      "company": "Church & Dwight",
+      "ticker": "CHD",
+      "sector": "Consumer Staples",
+      "cik": "313927",
+      "form": "10-K",
+      "accession": "0001193125-26-048139",
+      "filing_date": "2026-02-12",
+      "url": "https://www.sec.gov/Archives/edgar/data/313927/000119312526048139/chd-20251231.htm"
+    },
+    {
+      "company": "NextEra Energy",
+      "ticker": "NEE",
+      "sector": "Utilities",
+      "cik": "753308",
+      "form": "10-K",
+      "accession": "0000753308-26-000015",
+      "filing_date": "2026-02-13",
+      "url": "https://www.sec.gov/Archives/edgar/data/753308/000075330826000015/nee-20251231.htm"
+    },
+    {
+      "company": "Nucor",
+      "ticker": "NUE",
+      "sector": "Materials",
+      "cik": "73309",
+      "form": "10-K",
+      "accession": "0001193125-26-071575",
+      "filing_date": "2026-02-25",
+      "url": "https://www.sec.gov/Archives/edgar/data/73309/000119312526071575/nue-20251231.htm"
+    },
+    {
+      "company": "Sony Group",
+      "ticker": "SONY",
+      "sector": "Technology",
+      "cik": "313838",
+      "form": "20-F",
+      "accession": "0001193125-26-274893",
+      "filing_date": "2026-06-18",
+      "url": "https://www.sec.gov/Archives/edgar/data/313838/000119312526274893/d28719d20f.htm"
+    }
+  ]
+}

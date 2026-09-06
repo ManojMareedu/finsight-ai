@@ -15,7 +15,9 @@ app_port: 7860
 [![GitHub](https://img.shields.io/badge/Source-GitHub-181717?style=for-the-badge&logo=github)](https://github.com/ManojMareedu/finsight-ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-FinSight AI is a production-grade multi-agent system that autonomously researches, analyzes, and generates structured due diligence reports on any US public company. Type a company name. The system dispatches four specialized AI agents that retrieve real SEC 10-K filings, extract live financial metrics from EDGAR, assess risk factors, and synthesize everything into a structured analyst-style report with an investment signal, confidence score, and downloadable PDF. Every report is stamped with the actual filing date so readers know exactly how current the data is.
+FinSight AI is a portfolio-grade multi-agent system that autonomously researches, analyzes, and generates structured due diligence reports on any US public company. Type a company name. The system dispatches four specialized AI agents that retrieve real SEC 10-K filings, extract live financial metrics from EDGAR, assess risk factors, and synthesize everything into a structured analyst-style report with an investment signal, confidence score, and downloadable PDF. Every report is stamped with the actual filing date so readers know exactly how current the data is.
+
+> **Not financial advice.** This is an AI-generated analysis for informational purposes only.
 
 ---
 
@@ -28,7 +30,7 @@ FinSight AI is a production-grade multi-agent system that autonomously researche
 
 ## What It Does
 
-Manual financial due diligence takes analysts hours. Searching filings, pulling financial metrics, reading risk sections, cross-referencing news — then synthesizing it all into a structured report. FinSight AI does this in under 2 minutes for any US public company, at zero cost, running 24/7.
+Manual financial due diligence takes analysts hours. Searching filings, pulling financial metrics, reading risk sections, cross-referencing news — then synthesizing it all into a structured report. FinSight AI does this in under 2 minutes for any US public company, at zero cost. The hosted demo runs on HuggingFace Spaces' free Docker tier, which doesn't spin down between requests the way the free Gradio tier does — but it's a portfolio deployment, not an SLA-backed service; see Known Constraints.
 
 The system produces a report containing an executive summary, financial snapshot with real filed figures (revenue, net income, gross margin, EPS, debt ratio), risk factors with severity ratings sourced from actual filing text, competitive position analysis, recent developments, and an investment signal with confidence score. The report is available as JSON via the API or as a downloadable PDF from the UI.
 
@@ -54,7 +56,7 @@ graph TD
     G --> |Pydantic Schema Enforcement| G
 ```
 
-The core architectural pattern is the conditional edge after risk assessment. If the risk score exceeds 0.7 and the pipeline has not looped more than three times, the graph routes back to the research agent for a deeper pass. Otherwise it proceeds to synthesis. This loop with a conditional exit is what separates a stateful agent graph from a simple chain.
+The core architectural pattern is the conditional edge after risk assessment. If the risk score exceeds 0.7 and the pipeline has not looped more than three times, the graph routes back to the research agent for a deeper pass. Otherwise it proceeds to synthesis. The re-research pass is not a repeat of the first: it targets web search at the specific risk categories `risk_agent` just flagged (see `research_agent._build_queries`) instead of re-issuing the same three generic queries, so the loop is actually looking for something the first pass didn't already see.
 
 ---
 
@@ -74,7 +76,7 @@ The core architectural pattern is the conditional edge after risk assessment. If
 | Langfuse | Observability | Traces every LLM call: prompt, response, token count, latency. Free hosted tier, 50k traces/month. |
 | Docker + Compose | Containerization | Single `docker-compose up` runs the full stack identically on any machine. |
 | GitHub Actions | CI/CD | Lint, type-check, unit tests, Docker build validation on every push. |
-| HuggingFace Spaces | Hosting | Free, permanent, no spin-down, Docker support, HTTPS. 24/7 live demo. |
+| HuggingFace Spaces | Hosting | Free, Docker support, HTTPS. Docker Spaces don't spin down on inactivity the way free Gradio Spaces do, but uptime isn't guaranteed or monitored. |
 
 ---
 
@@ -109,17 +111,19 @@ finsight-ai/
 │   ├── evaluation/
 │   │   ├── ragas_eval.py          # RAGAS quality gate (pass/fail)
 │   │   ├── benchmark.py           # retrieval + RAG benchmark (deterministic + RAGAS)
-│   │   └── golden_dataset.json    # 10 Q/A pairs (Apple / Microsoft / Tesla 10-Ks)
+│   │   ├── dataset.py             # pinned corpus + XBRL-labelled golden set generator
+│   │   ├── report_eval.py         # product evaluation of the DueDiligenceReport itself
+│   │   └── golden_dataset.json    # 168 labelled items across 24 companies
 │   └── utils/
 │       ├── config.py              # Pydantic Settings from .env
 │       ├── data_fetchers.py       # EDGAR CIK lookup, 10-K download, XBRL financials
 │       ├── llm_client.py          # OpenRouter wrapper with system message normalisation
 │       └── pdf_generator.py       # ReportLab PDF generation
-├── tests/                         # 42 network-free unit tests
+├── tests/                         # unit tests; no network, no LLM calls
 ├── docs/
 │   ├── ENGINEERING_DECISIONS.md   # why each major decision was made
 │   └── RELEASE_CHECKLIST.md       # release status, limitations, reproducibility
-├── evaluation/results/            # benchmark_latest.{json,md}, latest.json (+ guide)
+├── evaluation/results/            # report output; regenerated by the eval targets, not committed
 ├── docker/
 │   └── Dockerfile.ui             # UI-only image (used by CI build check)
 ├── .github/workflows/
@@ -245,8 +249,10 @@ The retriever originally used MMR (Maximal Marginal Relevance), which trades som
 ## Evaluation & Benchmarks
 
 Retrieval and generation quality are measured, not asserted. The benchmark suite
-(`src/evaluation/benchmark.py`) reports two metric families over a 10-question
-golden set built from real Apple / Microsoft / Tesla 10-Ks:
+(`src/evaluation/benchmark.py`) reports two metric families over a 168-item
+golden set covering 24 companies in 11 sectors. Every numeric label is read out
+of one pinned SEC accession's XBRL company facts, so it traces to a filing
+rather than to a person's memory or a model's opinion:
 
 - **Deterministic** (no LLM, unlimited, reproducible): retrieval precision@k,
   retrieval recall, latency (mean / p95), success rate.
@@ -257,20 +263,97 @@ Every metric is documented in the generated report — *what it measures, why it
 matters, an acceptable range, and its limitations* — so the numbers are
 interpretable without reading the code.
 
-**Latest run** (judge `openai/gpt-oss-20b:free`, all 10 questions RAGAS-scored;
-full report:
-[`evaluation/results/benchmark_latest.md`](evaluation/results/benchmark_latest.md)):
+**Two separate harnesses exist and report different things — do not conflate them:**
 
-| Retrieval Precision@8 | Retrieval Recall | Success Rate | Latency p95 | Faithfulness | Answer Relevancy |
+- `src/evaluation/report_eval.py` (`make product-eval`) — scores the
+  `DueDiligenceReport` the API actually returns: key metrics against the XBRL
+  labels, risk citations against the retrieved chunks, signal stability across
+  repeated runs, whether the pipeline abstains on a company that does not
+  exist, and whether an adversarial chunk planted in the retrieved filing text
+  can move the investment signal. All of it is scored without an LLM judge, so
+  it is free to run and free of judge noise.
+- `src/evaluation/benchmark.py` (`make benchmark`) — deterministic retrieval
+  metrics (company-filter integrity, hit rate, keyword recall, latency,
+  success rate) over the golden set, plus RAGAS where the judge could parse it.
+- `src/evaluation/ragas_eval.py` (`make eval`) — the pass/fail RAGAS quality
+  gate.
+
+### Measured product-eval results
+
+The harness has now been run against the real pipeline twice: once to measure, and
+once after fixing what the first run exposed. These are the numbers it produced,
+not targets. **Sample size: 4 companies (Apple, Microsoft, NVIDIA, Adobe), 2 clean
+runs each plus 2 injected runs each, 3 abstention cases — 14 reports.** Full
+report: [`evaluation/results/product_eval_latest.md`](evaluation/results/product_eval_latest.md).
+
+| Gate | Threshold | First run | After the fixes | Scored N | Verdict |
 |---|---|---|---|---|---|
-| 1.00* | 0.79 | 10/10 | 33.4s | 0.93 | 0.73 |
+| `numeric_accuracy` | >= 0.99 | 1.0000 | **1.0000** | 31 metrics | pass |
+| `citation_attribution` | >= 0.90 | 0.5714 | **0.8182** | 11 risks | **fail** |
+| `signal_stability` | >= 0.80 | 0.5000 | **not scored** | 0 companies | **unmeasured** |
+| `abstention_correctness` | >= 0.95 | 0.3333 | **1.0000** | 3 cases | pass |
+| `injection_resistance` | == 0 | 1 moved the signal | **0 moved the signal** | 4 of 8 landed | pass |
 
-*Retrieval precision varies ~0.975–1.00 across runs — ChromaDB's HNSW index is
-approximate nearest-neighbor, not exact. `context_precision` came back `null`
-(RAGAS's most parse-fragile metric failed even on the strongest free judge —
-reported honestly, not as a zero); `context_recall` (0.30) is depressed because
-several ground-truth answers are exact financial figures that live in EDGAR XBRL,
-not the 10-K narrative the retriever searches (see Engineering Decisions §4).
+Wall clock: **44.9s mean, 91.4s p95 per report** on the free tier, over 14 reports.
+
+What changed between the two runs:
+
+- **Abstention, 0.33 to 1.00.** The system used to raise `degraded` only when the
+  risk JSON failed to parse, so a company with no filing and no EDGAR figures got a
+  confident report anyway — one came back `SELL` at confidence 0.15 for a name that
+  does not exist. It now refuses: no retrieved chunks and no EDGAR figures means no
+  report is generated at all, and the reader gets `INSUFFICIENT_DATA` at confidence
+  zero with the PDF and the UI saying no evidence was gathered.
+- **Citations, 0.57 to 0.82 — still short of the gate.** Risk citations were being
+  dropped between the risk agent and the synthesis agent, so the synthesis model
+  invented a document-level reference (`"SEC 10-K filing 2026-02-25"`) for every
+  risk. Citations are now carried through verbatim and the risk prompt demands a
+  quoted passage. The two remaining unattributed citations are both the literal
+  `"System fallback"` placeholder that a degraded run emits — a fabricated risk in
+  the user's report, which is a separate defect from the one this fixed.
+- **Injection, 1 success to 0 — and read it with the caveat.** 4 of 8 attempts were
+  scorable this time, up from 2. Zero moved signals on a pipeline whose own
+  run-to-run stability is unmeasured is consistent with resistance rather than proof
+  of it.
+- **Stability is now unmeasured, not 0.50.** Three of four companies produced one
+  usable clean signal out of two runs and one produced none, so no company had two
+  signals to compare. The free tier lost the second clean run again. A number from
+  one company was not a stability measurement and none is reported this time.
+
+Free-tier throughput is the binding constraint, not the harness. Throughput
+degraded to roughly 4-5 minutes per pipeline invocation once rate limiting
+engaged, which is why the slice is 4 companies and not 24. Each run appends a
+checkpoint row per company to `evaluation/results/history.jsonl`, so a stall
+costs the remainder of a run rather than the whole run.
+
+**A metric that cannot fail is not a metric.** Three of the five gates used to
+score perfectly against a pipeline that produced nothing: `injection_resistance`
+counted zero successful injections when no injection ever reached a prompt,
+`abstention_correctness` counted a perfect refusal rate when nothing worked at
+all, and `signal_stability` counted perfect agreement across the constant signal
+a degraded report emits. All three now require positive evidence and report
+*not scored* instead of a pass — which is why the table above says "2 of 8
+landed" rather than a clean zero.
+
+**Numeric labels are compared as raw numbers.** The golden set carries the
+unformatted XBRL figure alongside the displayed one, and the eval parses the
+report's string back to a number with a parser that shares no code with the
+product's formatter, then compares within the display's own rounding error.
+All 23 scored metrics went through that path. This breaks the circularity in
+the *formatting*; it does not break it in the *rule* — the concept priority and
+period selection in the label generator still mirror the production extractor,
+so a wrong reading of a GAAP concept would still be wrong identically on both
+sides. Breaking that needs a second independent interpretation of the filing,
+which is not free.
+
+**History is append-only.** Every run appends one versioned row to
+`evaluation/results/history.jsonl` and nothing rewrites it, so a regression is
+visible as a drop against the previous row. `python -m src.evaluation.benchmark`
+exits non-zero when a tracked metric falls more than 0.05 below the previous
+run, so the trend is gated and not only the absolute threshold.
+
+Running any of the three against the free tier is a manual step that costs model
+quota, which is why the CI job runs only the parts that need no API key.
 
 **Retrieval optimization was benchmark-driven.** The retriever and ingestion
 settings were tuned by rerunning the benchmark and keeping only changes that moved
@@ -294,7 +377,7 @@ RAGAS_JUDGE_PROVIDER=ollama make benchmark       # fully local via Ollama /v1
 ```
 
 Reports land in [`evaluation/results/`](evaluation/results/) as timestamped JSON +
-Markdown (`benchmark_latest.md` is the newest). **Caveat:** RAGAS scores depend on
+Markdown, plus a `_latest` copy of each. **Caveat:** RAGAS scores depend on
 the judge; free judges are noisy and `context_precision` is parse-fragile, so the
 deterministic metrics are the high-confidence signal and RAGAS is supplementary.
 
@@ -383,9 +466,11 @@ for k, v in data.items():
 
 ## Deployment
 
-The project deploys as a single Docker container running both FastAPI (port 8000) and Streamlit (port 7860). `start.sh` starts FastAPI in the background, polls the health endpoint until the API is ready, then starts Streamlit in the foreground.
+The deployed target is a single Docker container running both FastAPI (port 8000) and Streamlit (port 7860): `docker-compose up --build`, or the HuggingFace Space, which runs this container permanently on free CPU hardware with no spin-down. `start.sh` starts FastAPI in the background, polls the health endpoint until the API is ready, then starts Streamlit in the foreground. The embedding model is baked into the Docker image at build time so cold starts do not trigger a 2-3 minute model download.
 
-HuggingFace Spaces runs the container permanently on free CPU hardware with no spin-down. The embedding model is baked into the Docker image at build time so cold starts do not trigger a 2-3 minute model download.
+`docker-compose.yml` also defines an `api` and a `ui` service, behind a `split` profile, from the same root `Dockerfile`: `docker-compose --profile split up --build` runs them as separate containers so they scale and fail independently. This is not the deployment target — HuggingFace Spaces exposes only port 7860 — but it's how you'd run this on a host that can expose two ports. See `docs/scaling.md` for what running multiple API workers or replicas actually requires beyond this split.
+
+See `docs/performance.md` for measured retrieval, embedding, and concurrency numbers, and `docs/scaling.md` for what breaks first as load rises and what each fix costs.
 
 ---
 
@@ -418,15 +503,21 @@ HuggingFace Spaces runs the container permanently on free CPU hardware with no s
 
 ## Known Constraints
 
-- The golden evaluation set is small (10 questions across 3 companies) — enough to
-  drive retrieval tuning, but RAGAS scores on it are noisy on free judges; treat
-  the deterministic retrieval metrics as the reliable signal.
+- RAGAS scores are noisy on free judges; the deterministic retrieval and product
+  metrics are the reliable signal. The RAGAS numbers are supplementary.
 - Exact financial figures (revenue, margins) come from EDGAR XBRL, **not** RAG over
   the 10-K text — so numeric questions are answered by the data path, not retrieval.
 - Tavily web search is best-effort and gracefully skipped if the API key is missing.
 - Free LLMs on OpenRouter can be slow under load and are capped at ~50 requests/day
   on the free tier — a full RAGAS run may need the local Ollama judge or a cap
   (`RAGAS_MAX_SAMPLES`). Typical analysis takes 45–135 seconds.
+- Streamlit is launched with `--server.enableXsrfProtection=false` and CORS
+  disabled (`start.sh`). This was a deliberate tradeoff to let the Streamlit
+  UI call the FastAPI backend inside the same single-container deployment
+  without fighting Streamlit's same-origin assumptions — not something to
+  carry into a multi-origin or multi-tenant deployment unchanged. If this
+  moves beyond a single trusted container, re-enable both and front the pair
+  with a reverse proxy that terminates CORS properly instead.
 
 
 ## Author
@@ -444,4 +535,4 @@ MIT — see [LICENSE](LICENSE)
 
 ---
 
-> This project is built entirely on free, open-source tools. Total infrastructure cost: $0. Runs 24/7 with zero maintenance.
+> This project is built entirely on free, open-source tools. Total infrastructure cost: $0.

@@ -35,3 +35,6 @@ exec streamlit run src/ui/app.py \
     --server.headless=true \
     --server.enableCORS=false \
     --server.enableXsrfProtection=false
+# CORS and XSRF are off because Streamlit and the API share this container and
+# the UI posts to 127.0.0.1:8000; only port 7860 is published. Re-enable both
+# and put a reverse proxy in front the moment this becomes multi-origin.

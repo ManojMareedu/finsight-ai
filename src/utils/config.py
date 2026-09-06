@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     # Storage
     chroma_persist_dir: str = "./data/chroma"
 
+    # SEC EDGAR requires a descriptive User-Agent identifying the requester
+    # (see https://www.sec.gov/os/webmaster-faq#developers). Override in .env
+    # in production so SEC can reach the actual operator, not the repo author.
+    sec_edgar_user_agent: str = "FinSightAI research@example.com"
+
     # Behaviour
     log_level: str = "INFO"
     max_agent_iterations: int = 3
@@ -46,6 +51,8 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434/v1"
     ragas_faithfulness_min: float = 0.70
     ragas_answer_relevancy_min: float = 0.65
+    ragas_context_precision_min: float = 0.60
+    ragas_context_recall_min: float = 0.60
     # Cap eval samples (0 = all). Keeps a run under free-tier daily request caps.
     ragas_max_samples: int = 0
     # RAGAS RunConfig: per-call timeout (s) and worker concurrency. A high timeout

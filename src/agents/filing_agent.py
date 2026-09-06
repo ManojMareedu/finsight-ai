@@ -1,12 +1,10 @@
 # src/agents/filing_agent.py
 import logging
 
-import chromadb
-
 from src.graph.state import DueDiligenceState
+from src.rag.chroma_client import get_chroma_client
 from src.rag.ingestion import ingest_company_filing
 from src.rag.retriever import retrieve_context
-from src.utils.config import get_settings
 from src.utils.data_fetchers import resolve_ticker
 
 logger = logging.getLogger(__name__)
@@ -24,13 +22,15 @@ def filing_agent(state: DueDiligenceState) -> dict:
     provided_ticker = state.get("company_ticker", "")
     if provided_ticker is None:
         raise ValueError("Ticker must not be None")
-    ticker = resolve_ticker(company, provided_ticker)
-    settings = get_settings()
+    # resolve_ticker returns None when it can't match confidently; research_agent
+    # has already failed closed by then, so here an empty string is the right
+    # metadata value (chromadb rejects None).
+    ticker = resolve_ticker(company, provided_ticker) or ""
 
     # --- On-demand ingestion ---
     # Check if we already have chunks for this company before hitting EDGAR
     try:
-        client = chromadb.PersistentClient(path=settings.chroma_persist_dir)
+        client = get_chroma_client()
         collection = client.get_or_create_collection("financial_filings")
         existing = collection.get(where={"company": company}, limit=1)
         already_ingested = len(existing["ids"]) > 0
@@ -40,7 +40,7 @@ def filing_agent(state: DueDiligenceState) -> dict:
 
     if not already_ingested:
         logger.info(f"No filing found for {company} — ingesting from SEC EDGAR...")
-        count = ingest_company_filing(company, ticker, settings.chroma_persist_dir)
+        count = ingest_company_filing(company, ticker)
         if count == 0:
             logger.warning(
                 f"Ingestion returned 0 chunks for {company}. "

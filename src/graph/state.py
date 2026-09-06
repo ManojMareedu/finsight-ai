@@ -10,6 +10,7 @@ class DueDiligenceState(TypedDict):
     # Research agent outputs
     web_search_results: List[str]
     news_articles: List[dict]
+    financial_metrics: dict  # authoritative EDGAR figures — wins over LLM guesses
 
     # Filing RAG outputs
     filing_chunks: List[str]
@@ -18,6 +19,7 @@ class DueDiligenceState(TypedDict):
     # Risk agent outputs
     identified_risks: List[dict]
     risk_score: float
+    degraded: bool  # True if any agent fell back instead of failing loudly
 
     # Synthesis output
     final_report: Optional[dict]

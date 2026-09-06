@@ -273,5 +273,6 @@ docker build -t finsight . && \
   docker run -p 8000:8000 -e OPENROUTER_API_KEY=... finsight   # deployment
 ```
 
-See `evaluation/results/benchmark_latest.md` for the current numbers and
-`WORKLOG.md` for the dated decision trail.
+Run `make benchmark` to regenerate the report — no run is committed, since the
+harness was rebuilt after the last one. See `WORKLOG.md` for the dated decision
+trail.

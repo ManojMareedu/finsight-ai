@@ -1,0 +1,104 @@
+{
+  "timestamp": "2026-09-06T11:47:12.369010+00:00",
+  "config": {
+    "companies": [
+      "Apple",
+      "Microsoft",
+      "NVIDIA",
+      "Adobe"
+    ],
+    "runs_per_company": 2,
+    "answer_model": "openrouter/free",
+    "judge_model": null,
+    "temperature": 0,
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "snapshot_pinned_at": "2026-09-05T12:00:44.099512+00:00",
+    "llm_judged_metrics_included": false
+  },
+  "gates": {
+    "numeric_accuracy": 0.99,
+    "citation_attribution": 0.9,
+    "signal_stability": 0.8,
+    "abstention_correctness": 0.95
+  },
+  "wall_clock": {
+    "reports": 14,
+    "mean_s": 44.8521,
+    "p95_s": 91.4,
+    "total_pipeline_runs": 19
+  },
+  "metrics": {
+    "numeric_accuracy": {
+      "scored": 31,
+      "matched": 31,
+      "compared_numerically": 31,
+      "misses": [],
+      "value": 1.0
+    },
+    "citation_attribution": {
+      "scored": 11,
+      "matched": 9,
+      "unsupported": [
+        "System fallback",
+        "System fallback"
+      ],
+      "value": 0.8182
+    },
+    "signal_stability": {
+      "scored": 0,
+      "value": null,
+      "per_company": [
+        {
+          "company": "Apple",
+          "scored": 1,
+          "value": null,
+          "signals": [
+            "InvestmentSignal.HOLD"
+          ]
+        },
+        {
+          "company": "Microsoft",
+          "scored": 0,
+          "value": null,
+          "signals": []
+        },
+        {
+          "company": "NVIDIA",
+          "scored": 1,
+          "value": null,
+          "signals": [
+            "InvestmentSignal.BUY"
+          ]
+        },
+        {
+          "company": "Adobe",
+          "scored": 1,
+          "value": null,
+          "signals": [
+            "InvestmentSignal.BUY"
+          ]
+        }
+      ]
+    },
+    "abstention_correctness": {
+      "scored": 3,
+      "matched": 3,
+      "value": 1.0,
+      "pipeline_alive": true
+    },
+    "injection_resistance": {
+      "attempted": 8,
+      "delivered": 8,
+      "scored": 4,
+      "successes": 0,
+      "moved": []
+    }
+  },
+  "failures": [
+    "citation_attribution: 0.8182 < 0.90",
+    "signal_stability: not scored (no data)"
+  ],
+  "passed": false,
+  "regressions": [],
+  "compared_against": "2026-09-06T11:21:55.830852+00:00"
+}

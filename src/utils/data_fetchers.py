@@ -1,16 +1,60 @@
 import logging
 import re
+import time
 from functools import lru_cache
-from typing import Optional
+from typing import Iterator, Optional
 
 import requests
 from bs4 import BeautifulSoup
 
+from src.utils.config import get_settings
+from src.utils.retry import retry_with_backoff
+
 logger = logging.getLogger(__name__)
 
-EDGAR_HEADERS = {"User-Agent": "FinSightAI manoj.mareedu.pro@gmail.com"}
 
-# Fallback map for common companies where name-to-ticker is ambiguous
+def _edgar_headers() -> dict:
+    return {"User-Agent": get_settings().sec_edgar_user_agent}
+
+
+# This is a per-process floor, not a cluster-wide limiter — every fork/worker
+# gets its own 100ms clock. Fine for a single container; would need a shared
+# token bucket if this ever runs as more than one process against SEC's 10
+# req/s policy.
+_EDGAR_MIN_INTERVAL = 0.1
+_last_edgar_call = 0.0
+
+
+def _throttle_edgar() -> None:
+    global _last_edgar_call
+    elapsed = time.monotonic() - _last_edgar_call
+    if elapsed < _EDGAR_MIN_INTERVAL:
+        time.sleep(_EDGAR_MIN_INTERVAL - elapsed)
+    _last_edgar_call = time.monotonic()
+
+
+# Common legal suffixes stripped before matching a company name against
+# KNOWN_TICKERS, so "Apple Inc" still matches "apple" without letting
+# substring matching hit unrelated companies (see resolve_ticker).
+_LEGAL_SUFFIX_RE = re.compile(r"\b(inc|incorporated|corp|corporation|co|company|ltd|llc|plc)\b\.?")
+
+
+class CompanyNotResolvedError(Exception):
+    """Raised when a company name cannot be confidently resolved to a ticker
+    or SEC CIK. Callers must fail closed (e.g. HTTP 422) instead of guessing —
+    a wrong guess silently analyzes the wrong company."""
+
+
+# Fallback map for common companies where name-to-ticker is ambiguous.
+#
+# T0-4: this duplicates data that _get_edgar_tickers() also has, but it isn't
+# dead weight — it's the only ticker lookup that works before any network call
+# (or SEC list cache) exists, so research_agent/filing_agent get a real ticker
+# for logging/metadata on the very first request instead of "" until the
+# cache warms. Deleting it means resolve_ticker degrades to "provided_ticker
+# or nothing" and every offline/pure-function test for it goes with it — kept
+# for now; get_company_cik remains the sole source of truth for the CIK either
+# way, so this map cannot cause a wrong-company analysis.
 KNOWN_TICKERS: dict[str, str] = {
     "apple": "AAPL",
     "microsoft": "MSFT",
@@ -45,22 +89,26 @@ KNOWN_TICKERS: dict[str, str] = {
 }
 
 
-def resolve_ticker(company_name: str, provided_ticker: str = "") -> str:
+def resolve_ticker(company_name: str, provided_ticker: str = "") -> Optional[str]:
     """
-    Returns the best ticker guess for a company name.
-    Priority: provided_ticker > known map > first 4 chars of name (last resort).
+    Returns the best ticker guess for a company name, or None if it cannot be
+    resolved with confidence. Priority: provided_ticker > exact match against
+    KNOWN_TICKERS (after stripping legal suffixes like "Inc"/"Corp").
+
+    No more substring guessing and no more "first 4 letters" fallback — those
+    silently matched the wrong company (e.g. "Intelsat" -> INTC via substring
+    "intel", "Zeta Corp" -> "ZETA" via truncation). A caller getting None back
+    must resolve via the authoritative SEC CIK lookup or fail closed.
     """
     if provided_ticker and provided_ticker.strip():
         return provided_ticker.strip().upper()
     name_lower = company_name.lower().strip()
     if name_lower in KNOWN_TICKERS:
         return KNOWN_TICKERS[name_lower]
-    # Try partial match (e.g. "Apple Inc" -> "apple")
-    for key, ticker in KNOWN_TICKERS.items():
-        if key in name_lower:
-            return ticker
-    # Last resort: first 4 chars uppercased
-    return re.sub(r"[^A-Z]", "", company_name.upper())[:4]
+    stripped = _LEGAL_SUFFIX_RE.sub("", name_lower).strip()
+    if stripped in KNOWN_TICKERS:
+        return KNOWN_TICKERS[stripped]
+    return None
 
 
 def get_company_cik(company_name: str) -> Optional[str]:
@@ -90,11 +138,13 @@ def get_company_cik(company_name: str) -> Optional[str]:
         if name_lower in title.lower():
             return cik
 
-    # Pass 3: search term contains a word from the company name (looser)
+    # Pass 3: a whole word from the company name matches a whole word in the
+    # SEC title (tightened from substring matching, which let "Intelsat"
+    # match "Intel" and "American Airlines" match "American Express").
     name_words = [w for w in name_lower.split() if len(w) > 3]
     for _ticker, title, cik in tickers:
-        title_lower = title.lower()
-        if any(word in title_lower for word in name_words):
+        title_words = set(title.lower().split())
+        if any(word in title_words for word in name_words):
             return cik
 
     logger.warning(f"No CIK found for: {company_name}")
@@ -111,12 +161,18 @@ def _get_edgar_tickers() -> tuple[tuple[str, str, str], ...]:
     fetch error the exception propagates (and is NOT cached), so the next call
     retries — the caller downgrades it to a None CIK.
     """
-    resp = requests.get(
-        "https://www.sec.gov/files/company_tickers.json",
-        headers=EDGAR_HEADERS,
-        timeout=15,
-    )
-    resp.raise_for_status()
+
+    def _fetch():
+        r = requests.get(
+            "https://www.sec.gov/files/company_tickers.json",
+            headers=_edgar_headers(),
+            timeout=15,
+        )
+        r.raise_for_status()
+        return r
+
+    _throttle_edgar()
+    resp = retry_with_backoff(_fetch)
     data = resp.json()
     return tuple((e["ticker"], e["title"], str(e["cik_str"])) for e in data.values())
 
@@ -148,36 +204,92 @@ def _clean_filing_text(raw: str) -> str:
     return text
 
 
+def _submission_pages(data: dict) -> Iterator[dict]:
+    """The recent-submissions block first, then the older pages behind it.
+
+    ``filings.recent`` holds only the newest 1000 submissions. A heavy filer
+    (JPMorgan has filed ~26,000; its recent window reaches back barely a year)
+    can push its own 10-K out of that block, at which point the report loses
+    both its filing text and its data date with no error anywhere. The older
+    pages are fetched lazily, so a company whose 10-K is in the recent window
+    still costs exactly one request.
+    """
+    filings = data.get("filings", {})
+    yield filings.get("recent", {})
+    for page in filings.get("files", []):
+        name = page.get("name", "")
+        if not name:
+            continue
+
+        def _fetch(name: str = name):
+            r = requests.get(
+                f"https://data.sec.gov/submissions/{name}", headers=_edgar_headers(), timeout=15
+            )
+            r.raise_for_status()
+            return r
+
+        try:
+            _throttle_edgar()
+            yield dict(retry_with_backoff(_fetch).json())
+        except Exception as e:
+            logger.warning(f"Could not fetch older submissions page {name}: {e}")
+
+
+def _latest_10k(data: dict) -> Optional[tuple[str, str, str]]:
+    """(accession, primary document, filing date) of the newest 10-K, or None."""
+    for page in _submission_pages(data):
+        for form, accnum, filed, doc in zip(
+            page.get("form", []),
+            page.get("accessionNumber", []),
+            page.get("filingDate", []),
+            page.get("primaryDocument", []),
+        ):
+            if form == "10-K":
+                return accnum, doc, filed
+    return None
+
+
+def _fetch_submissions_json(cik: str) -> Optional[dict]:
+    url = f"https://data.sec.gov/submissions/CIK{cik.zfill(10)}.json"
+
+    def _fetch():
+        r = requests.get(url, headers=_edgar_headers(), timeout=15)
+        r.raise_for_status()
+        return r
+
+    try:
+        _throttle_edgar()
+        return dict(retry_with_backoff(_fetch).json())
+    except Exception as e:
+        logger.error(f"Failed to fetch submissions for CIK {cik}: {e}")
+        return None
+
+
 def get_latest_10k_text(cik: str, max_chars: int = 50000) -> str:
     """
     Download and clean the most recent 10-K filing from SEC EDGAR.
     """
-    url = f"https://data.sec.gov/submissions/CIK{cik.zfill(10)}.json"
-
-    try:
-        data = requests.get(url, headers=EDGAR_HEADERS, timeout=15).json()
-    except Exception as e:
-        logger.error(f"Failed to fetch submissions for CIK {cik}: {e}")
+    data = _fetch_submissions_json(cik)
+    if data is None:
         return ""
 
-    filings = data.get("filings", {}).get("recent", {})
-
-    forms = filings.get("form", [])
-    accnums = filings.get("accessionNumber", [])
-    primary_docs = filings.get("primaryDocument", [])
-
-    for form, accnum, primary_doc in zip(forms, accnums, primary_docs):
-        if form != "10-K":
-            continue
+    latest = _latest_10k(data)
+    if latest is not None:
+        accnum, primary_doc, _ = latest
 
         acc_no_dash = accnum.replace("-", "")
         filing_url = (
             f"https://www.sec.gov/Archives/edgar/data/" f"{int(cik)}/{acc_no_dash}/{primary_doc}"
         )
 
+        def _fetch_filing():
+            r = requests.get(filing_url, headers=_edgar_headers(), timeout=30)
+            r.raise_for_status()
+            return r
+
         try:
-            resp = requests.get(filing_url, headers=EDGAR_HEADERS, timeout=30)
-            resp.raise_for_status()
+            _throttle_edgar()
+            resp = retry_with_backoff(_fetch_filing)
             raw = resp.text
         except Exception as e:
             logger.warning(f"Failed to download filing {filing_url}: {e}")
@@ -192,19 +304,7 @@ def get_latest_10k_text(cik: str, max_chars: int = 50000) -> str:
 
     logger.warning(f"No 10-K filing found for CIK {cik}")
     return ""
-
-
-def get_stock_info(ticker: str) -> dict:
-    """
-    Get financial metrics from SEC EDGAR company facts API.
-    Same API already used for filings — no rate limits, no API key, official data.
-    Falls back to empty dict gracefully if CIK lookup fails.
-    """
-    cik = get_company_cik(ticker)  # try ticker as search term first
-    if not cik:
-        logger.warning(f"Could not resolve CIK for {ticker} — skipping financials")
-        return {}
-    return get_financials_from_edgar(cik)
+    return ""
 
 
 def get_financials_from_edgar(cik: str) -> dict:
@@ -215,10 +315,14 @@ def get_financials_from_edgar(cik: str) -> dict:
     """
     url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik.zfill(10)}.json"
 
+    def _fetch():
+        r = requests.get(url, headers=_edgar_headers(), timeout=15)
+        r.raise_for_status()
+        return r
+
     try:
-        resp = requests.get(url, headers=EDGAR_HEADERS, timeout=15)
-        resp.raise_for_status()
-        facts = resp.json()
+        _throttle_edgar()
+        facts = retry_with_backoff(_fetch).json()
     except Exception as e:
         logger.warning(f"EDGAR company facts fetch failed for CIK {cik}: {e}")
         return {}
@@ -357,18 +461,25 @@ def _latest_annual(us_gaap: dict, concept_names: list) -> Optional[float]:
             if end not in by_period or filed > by_period[end].get("filed", ""):
                 by_period[end] = entry
 
-        # Filter to confirmed full-year periods (300+ days)
+        # Keep confirmed full-year periods (300+ days). Balance-sheet concepts
+        # (Assets, Liabilities) are instant facts and carry no start date at
+        # all — they are point-in-time by definition, so the duration check
+        # cannot apply to them. Requiring a start silently dropped every one of
+        # them, which is why total_assets and debt_ratio never reached a report.
         for entry in by_period.values():
             start = entry.get("start", "")
             end = entry.get("end", "")
-            if not start or not end:
+            if not end:
                 continue
-            try:
-                days = (datetime.date.fromisoformat(end) - datetime.date.fromisoformat(start)).days
-                if days < 300:
+            if start:
+                try:
+                    days = (
+                        datetime.date.fromisoformat(end) - datetime.date.fromisoformat(start)
+                    ).days
+                    if days < 300:
+                        continue
+                except Exception:
                     continue
-            except Exception:
-                continue
 
             # Keep track of the entry with the most recent fiscal year end
             if end > best_end:
@@ -382,13 +493,18 @@ def _latest_annual(us_gaap: dict, concept_names: list) -> Optional[float]:
 
 def _fmt_large(value: float) -> str:
     """Format large dollar amounts into readable strings."""
-    if value >= 1_000_000_000_000:
-        return f"${value / 1_000_000_000_000:.2f}T"
-    if value >= 1_000_000_000:
-        return f"${value / 1_000_000_000:.2f}B"
-    if value >= 1_000_000:
-        return f"${value / 1_000_000:.2f}M"
-    return f"${value:,.0f}"
+    # Scale on magnitude, not the signed value, so a net loss gets the same
+    # T/B/M treatment as a profit instead of falling through every threshold
+    # (all of them are false for a negative number) into an unscaled figure.
+    sign = "-" if value < 0 else ""
+    magnitude = abs(value)
+    if magnitude >= 1_000_000_000_000:
+        return f"{sign}${magnitude / 1_000_000_000_000:.2f}T"
+    if magnitude >= 1_000_000_000:
+        return f"{sign}${magnitude / 1_000_000_000:.2f}B"
+    if magnitude >= 1_000_000:
+        return f"{sign}${magnitude / 1_000_000:.2f}M"
+    return f"{sign}${magnitude:,.0f}"
 
 
 def _parse_fmt_large(value_str: str) -> Optional[float]:
@@ -408,12 +524,17 @@ def _parse_fmt_large(value_str: str) -> Optional[float]:
 
 def _revenue_growth(us_gaap: dict, concept_names: list) -> Optional[float]:
     """
-    Calculate YoY revenue growth using the two most recent full-year values
-    across all concept names. Handles companies that switch GAAP concepts.
+    Calculate YoY revenue growth from the two most recent full-year values
+    within a single GAAP concept. Never diffs across concepts: pooling
+    RevenueFromContractWithCustomerExcludingAssessedTax against Revenues (the
+    Nvidia case _latest_annual's docstring calls out) compares two different
+    measures and produces a confidently wrong number. Each concept is checked
+    independently and the candidate with the most recent qualifying pair wins.
     """
     import datetime
 
-    all_full_year: list[dict] = []
+    best_growth: Optional[float] = None
+    best_end: str = ""
 
     for concept in concept_names:
         data = us_gaap.get(concept, {})
@@ -423,7 +544,7 @@ def _revenue_growth(us_gaap: dict, concept_names: list) -> Optional[float]:
         if not annual:
             continue
 
-        # Deduplicate by period end
+        # Deduplicate by period end, keep latest filing per period
         by_period: dict[str, dict] = {}
         for entry in annual:
             end = entry.get("end", "")
@@ -433,7 +554,7 @@ def _revenue_growth(us_gaap: dict, concept_names: list) -> Optional[float]:
             if end not in by_period or filed > by_period[end].get("filed", ""):
                 by_period[end] = entry
 
-        # Filter to full-year periods
+        full_year = []
         for entry in by_period.values():
             start = entry.get("start", "")
             end = entry.get("end", "")
@@ -442,31 +563,47 @@ def _revenue_growth(us_gaap: dict, concept_names: list) -> Optional[float]:
             try:
                 days = (datetime.date.fromisoformat(end) - datetime.date.fromisoformat(start)).days
                 if days >= 300:
-                    all_full_year.append(entry)
+                    full_year.append(entry)
             except Exception:
                 continue
 
-    if len(all_full_year) < 2:
-        return None
+        if len(full_year) < 2:
+            continue
 
-    # Deduplicate across concepts by period end date
-    by_period_final: dict[str, dict] = {}
-    for entry in all_full_year:
-        end = entry.get("end", "")
-        filed = entry.get("filed", "")
-        if end not in by_period_final or filed > by_period_final[end].get("filed", ""):
-            by_period_final[end] = entry
+        full_year.sort(key=lambda x: x["end"], reverse=True)
+        current, previous = full_year[0], full_year[1]
 
-    sorted_entries = sorted(by_period_final.values(), key=lambda x: x.get("end", ""), reverse=True)
+        # The two periods must be adjacent fiscal years, not just the two
+        # most recent full-year filings on file — a gap (e.g. a restated or
+        # skipped year) makes the delta meaningless as a YoY rate.
+        try:
+            gap_days = (
+                datetime.date.fromisoformat(current["end"])
+                - datetime.date.fromisoformat(previous["end"])
+            ).days
+        except Exception:
+            continue
+        if not (300 <= gap_days <= 430):
+            continue
 
-    if len(sorted_entries) < 2:
-        return None
+        if previous["val"] == 0:
+            continue
 
-    current = float(sorted_entries[0]["val"])
-    previous = float(sorted_entries[1]["val"])
-    if previous == 0:
-        return None
-    return ((current - previous) / previous) * 100
+        growth = ((float(current["val"]) - float(previous["val"])) / float(previous["val"])) * 100
+
+        if abs(growth) > 300:
+            logger.warning(
+                f"Revenue growth {growth:.1f}% for concept {concept} exceeds the "
+                "plausible bound (>300%) — dropping instead of reporting a likely "
+                "bad comparison"
+            )
+            continue
+
+        if current["end"] > best_end:
+            best_end = current["end"]
+            best_growth = round(growth, 3)
+
+    return best_growth
 
 
 def get_latest_10k_date(cik: str) -> Optional[str]:
@@ -474,13 +611,8 @@ def get_latest_10k_date(cik: str) -> Optional[str]:
     Returns the filing date of the most recent 10-K for a company.
     Used to stamp reports with the actual data date, not today's date.
     """
-    url = f"https://data.sec.gov/submissions/CIK{cik.zfill(10)}.json"
-    try:
-        data = requests.get(url, headers=EDGAR_HEADERS, timeout=15).json()
-        filings = data.get("filings", {}).get("recent", {})
-        for form, date in zip(filings.get("form", []), filings.get("filingDate", [])):
-            if form == "10-K":
-                return date  # e.g. "2024-07-30"
-    except Exception as e:
-        logger.warning(f"Could not fetch 10-K date for CIK {cik}: {e}")
-    return None
+    data = _fetch_submissions_json(cik)
+    if data is None:
+        return None
+    latest = _latest_10k(data)
+    return latest[2] if latest else None  # e.g. "2024-07-30"

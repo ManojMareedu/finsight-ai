@@ -80,13 +80,18 @@ non-blocking future work: P2-3 (deferred — architecture), P2-4 remainder, P2-5
   gate. Documented as manual/local (README roadmap + config comments). mypy/ruff
   clean; both backends verified to construct offline.
 
-- [x] **P1-5c · RAGAS returned NaN for all metrics — FIXED 2026-07-14.** Full RCA
-  in WORKLOG (dep drift `langchain-core` 1.x; judge unreachable/weak-JSON; RAGAS
-  parses only the `ChatOpenAI` path not `ChatOllama`; free-tier 50 req/day cap;
-  NaN written silently). Fixes: pin `langchain-core`, dedicated `ragas_judge_model`,
-  local judge via Ollama `/v1`, fail-loud NaN guard, `RunConfig` timeout,
-  `ragas_max_samples`. Rerun computes all 4 metrics (no NaN); results in
-  `evaluation/results/latest.json` (N=3 local run). Commit 307de80.
+- [x] **P1-5c · RAGAS returned NaN for all metrics — the NaN bug itself is fixed
+  (2026-07-14), the quality gate is NOT passing.** Full RCA in WORKLOG (dep drift
+  `langchain-core` 1.x; judge unreachable/weak-JSON; RAGAS parses only the
+  `ChatOpenAI` path not `ChatOllama`; free-tier 50 req/day cap; NaN written
+  silently). Fixes: pin `langchain-core`, dedicated `ragas_judge_model`, local
+  judge via Ollama `/v1`, fail-loud NaN guard, `RunConfig` timeout,
+  `ragas_max_samples`. Rerun computes all 4 metrics (no NaN) — but the last
+  recorded run (N=3, commit 307de80) had `context_precision: 0.11` and
+  `"passed": false`. That artifact (`evaluation/results/latest.json`) has been
+  removed from the repo since it was a stale failing run being read as a green
+  checkmark; `make eval` regenerates it. **There is no passing run of this gate
+  on record — do not mark this done until one exists.**
 
 - [x] **R2 · Comprehensive benchmark harness — DONE 2026-07-15.**
   `src/evaluation/benchmark.py` (`make benchmark`): deterministic retrieval

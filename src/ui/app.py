@@ -35,6 +35,7 @@ SIGNAL_COLORS = {
     "HOLD": "🟡",
     "SELL": "🔴",
     "STRONG_SELL": "🔴",
+    "INSUFFICIENT_DATA": "⚪",
 }
 
 
@@ -51,6 +52,19 @@ def render_report(report: dict) -> None:
         f"{SIGNAL_COLORS.get(signal, '')} {signal}",
     )
     col3.metric("Confidence", f"{confidence:.0%}")
+
+    if signal == "INSUFFICIENT_DATA":
+        st.error(
+            "No evidence gathered. FinSight retrieved no SEC filing text and no financial "
+            "figures for this company, so it produced no investment signal. Check the "
+            "company name and whether the company files with the SEC."
+        )
+    elif report.get("degraded"):
+        st.warning(
+            "Degraded report: at least one agent fell back instead of returning real data, "
+            "so parts of this report rest on less evidence than usual. Treat the signal and "
+            "the risk factors with corresponding caution."
+        )
 
     st.divider()
 
@@ -131,6 +145,8 @@ def main() -> None:
 
     st.divider()
 
+    st.caption("⚠️ AI-generated analysis for informational purposes only. Not financial advice.")
+
     # Input row
     col1, col2, col3 = st.columns([3, 1, 1])
     company = col1.text_input(
@@ -146,6 +162,15 @@ def main() -> None:
     if not company.strip():
         st.warning("Please enter a company name.")
         return
+
+    # Per-session in-memory cap — resets on page refresh, so it only stops one
+    # tab from looping analyses, not a determined user. Swap for server-side
+    # auth/quota if that starts to matter.
+    st.session_state.setdefault("analyses_run", 0)
+    if st.session_state["analyses_run"] >= 10:
+        st.error("Session limit reached (10 analyses). Refresh the page to reset.")
+        return
+    st.session_state["analyses_run"] += 1
 
     # Progress display — shows each agent step as it would run
     with st.status("Running multi-agent analysis...", expanded=True) as status:

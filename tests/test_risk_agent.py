@@ -61,3 +61,43 @@ def test_unparseable_output_uses_fallback(monkeypatch):
     assert out["risk_score"] == 0.3
     assert len(out["identified_risks"]) == 1
     assert out["identified_risks"][0]["category"] == "Data Unavailable"
+    assert out["degraded"] is True
+
+
+def test_json_array_of_strings_does_not_raise(monkeypatch):
+    # A model returning ["competition", "supply chain"] used to raise
+    # AttributeError from r.get(...) on a plain string and 500 the analysis.
+    _patch_chat(monkeypatch, json.dumps(["competition", "supply chain"]))
+    out = risk_agent(_state())
+    # No dicts survive the isinstance filter -> falls back like unparseable output.
+    assert out["risk_score"] == 0.3
+    assert out["identified_risks"][0]["category"] == "Data Unavailable"
+    assert out["degraded"] is True
+
+
+def test_llm_call_failure_degrades_instead_of_raising(monkeypatch):
+    def _boom(*a, **k):
+        raise RuntimeError("provider down")
+
+    monkeypatch.setattr(risk_module, "chat", _boom)
+    out = risk_agent(_state())  # must not raise
+    assert out["risk_score"] == 0.3
+    assert out["degraded"] is True
+
+
+def test_no_filing_and_no_financials_is_degraded(monkeypatch):
+    # The model still answers confidently with nothing to go on; the report must
+    # not inherit that confidence.
+    risks = [{"category": "A", "description": "d", "severity": "HIGH", "source_citation": "s"}] * 3
+    _patch_chat(monkeypatch, json.dumps(risks))
+
+    out = risk_agent(
+        {
+            "company_name": "Qqqqq Industries",
+            "retrieved_context": [],
+            "web_search_results": ["a search result about something else"],
+            "financial_metrics": {},
+        }
+    )
+
+    assert out["degraded"] is True

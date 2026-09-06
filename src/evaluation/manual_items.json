@@ -1,0 +1,44 @@
+[
+  {
+    "question": "What are the main products Apple sells?",
+    "ground_truth": "Apple sells iPhone, Mac, iPad, wearables and accessories, and services including the App Store, iCloud and Apple Music.",
+    "company": "Apple",
+    "section": "Item 1. Business"
+  },
+  {
+    "question": "What competitive risks does Apple identify in its 10-K?",
+    "ground_truth": "Apple cites intense competition in all of its markets, rapid technological change and frequent new product introductions, and downward pressure on prices and margins.",
+    "company": "Apple",
+    "section": "Item 1A. Risk Factors"
+  },
+  {
+    "question": "What are the primary risk factors Tesla cites in its 10-K?",
+    "ground_truth": "Tesla cites competition in the automotive and energy markets, its ability to scale manufacturing, and supply chain and raw material availability as principal risks.",
+    "company": "Tesla",
+    "section": "Item 1A. Risk Factors"
+  },
+  {
+    "question": "What risks does Tesla identify related to vehicle deliveries?",
+    "ground_truth": "Tesla cites production ramp constraints, logistics and transportation capacity, and the customer delivery experience as risks affecting delivery volumes in a given period.",
+    "company": "Tesla",
+    "section": "Item 1A. Risk Factors"
+  },
+  {
+    "question": "How does Tesla describe its manufacturing strategy?",
+    "ground_truth": "Tesla describes a vertically integrated manufacturing strategy run out of its Gigafactories, aimed at lowering cost per vehicle and scaling production capacity.",
+    "company": "Tesla",
+    "section": "Item 1. Business"
+  },
+  {
+    "question": "How does Microsoft describe its cloud business performance?",
+    "ground_truth": "Microsoft describes growth in Microsoft Cloud, driven by Azure and other cloud services, as the main driver of its Intelligent Cloud segment.",
+    "company": "Microsoft",
+    "section": "Item 7. Management's Discussion and Analysis"
+  },
+  {
+    "question": "What is Microsoft's largest reportable segment by revenue?",
+    "ground_truth": "Intelligent Cloud, which includes Azure and other cloud services along with server products, is Microsoft's largest reportable segment by revenue.",
+    "company": "Microsoft",
+    "section": "Item 8. Segment Information"
+  }
+]

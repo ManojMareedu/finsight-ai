@@ -19,4 +19,10 @@ eval:
 benchmark:
 	python -m src.evaluation.benchmark
 
-.PHONY: install run-api run-ui test lint eval benchmark
+product-eval:
+	python -m src.evaluation.report_eval
+
+eval-dataset:
+	python -m src.evaluation.dataset check
+
+.PHONY: install run-api run-ui test lint eval benchmark product-eval eval-dataset

@@ -15,13 +15,15 @@ scope, how to verify it, and how to reproduce every claim.
   Streamlit UI with PDF export.
 
 **Reliability & quality**
-- 42 network-free unit tests (all HTTP/LLM mocked).
+- Network-free unit tests (all HTTP/LLM mocked); `pytest` is a release gate.
 - Gates green: **ruff**, **black**, **mypy**, **pytest**.
 - CI (GitHub Actions): lint + type-check + tests + Docker build on every push.
 - Fail-loud evaluation: RAGAS NaN raises instead of writing a fake result.
 
 **Evaluation & benchmarks**
-- RAGAS quality gate (`make eval`) with thresholds → `evaluation/results/latest.json`.
+- RAGAS quality gate (`make eval`) with thresholds, and a deterministic product
+  evaluation of the report itself (`make product-eval`); both write to
+  `evaluation/results/`.
 - Comprehensive benchmark (`make benchmark`): deterministic retrieval precision@k,
   recall, latency mean/p95, success rate (all questions) + RAGAS (full set),
   self-documenting Markdown/JSON reports.
@@ -35,27 +37,20 @@ scope, how to verify it, and how to reproduce every claim.
 - `README.md`, `ENGINEERING_GUIDE.md` (engineering guide), `docs/ENGINEERING_DECISIONS.md`
   (interview-grade rationale), `WORKLOG.md` (dated decision trail), `TODO.md`.
 
-## 📊 Benchmark summary (v1.0.0)
+## Benchmark summary (v1.0.0)
 
-Judge `openai/gpt-oss-20b:free` via OpenRouter, 10-question golden set, all 10
-RAGAS-scored. Report: `evaluation/results/benchmark_latest.md`.
+The evaluation harnesses were rebuilt after the numbers previously quoted here
+were produced, and the reports they described were deleted rather than left to
+be cited against code that no longer matches them. There is no committed run of
+`make eval`, `make benchmark` or `make product-eval` on record. Regenerate one
+before claiming a score; each writes to `evaluation/results/`.
 
-| Metric | Value | Notes |
-|---|---|---|
-| Retrieval Precision@8 | **1.00** | ~0.975–1.00 run-to-run (approximate HNSW) |
-| Retrieval Recall | **0.79** | keyword-overlap proxy, qualitative questions |
-| Success Rate | **10/10** | end-to-end, no exceptions |
-| Latency total mean / p95 | **17.4s / 33.4s** | free hosted LLM dominates |
-| RAGAS Faithfulness | **0.93** | ≥ 0.70 threshold ✅ |
-| RAGAS Answer Relevancy | **0.73** | ≥ 0.65 threshold ✅ |
-| RAGAS Context Recall | 0.30 | see limitations |
-| RAGAS Context Precision | `null` | parse-fragile on free judge (not zero) |
 
-## ⚠️ Known limitations (honest)
+## Known limitations
 
-- **Golden set is small** (10 Q across 3 companies) — enough to drive retrieval
-  tuning, but RAGAS scores on it are noisy; the deterministic metrics are the
-  high-confidence signal.
+- **RAGAS scores are noisy on free judges** — the deterministic retrieval and
+  product metrics are the high-confidence signal. The golden set itself is now
+  168 items over 24 companies, every numeric label traced to a pinned accession.
 - **`context_recall` is low (0.30)** and **`context_precision` is `null`**: several
   ground-truth answers are exact financial figures (revenue, margin) that are
   reported via EDGAR **XBRL**, not the 10-K narrative the retriever searches — so
@@ -77,8 +72,6 @@ RAGAS-scored. Report: `evaluation/results/benchmark_latest.md`.
 ## 🗺️ Future roadmap (out of v1.0.0 scope)
 
 - Wire eval into CI as an opt-in job with a seeded fixture corpus (TODO P1-5b).
-- Expand and human-review the golden set for tighter RAGAS confidence.
-- Consolidate the two ChromaDB access patterns (TODO P2-3).
 - Streaming UI updates; multi-company comparison; response caching; retry/backoff.
 
 ## 🔁 Reproducibility guide
@@ -107,7 +100,7 @@ docker compose up --build      # full stack (UI :7860, API :8000/docs)
 - [x] README / ENGINEERING_GUIDE / ENGINEERING_DECISIONS synchronized with code
 - [x] every major claim has evidence (tests / benchmark / CI / live demo / schema)
 
-## 🚀 Deployment summary
+## Deployment summary
 
 - **Image:** single Docker container; `start.sh` runs FastAPI (:8000, health-gated)
   then Streamlit (:7860). Embedding model baked at build time for fast cold start.

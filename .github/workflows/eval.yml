@@ -1,0 +1,62 @@
+name: Evaluation
+
+# Scheduled, not per-PR: a full product evaluation runs the real workflow and
+# spends OpenRouter free-tier quota, which a busy PR queue would exhaust in a
+# morning. The deterministic half needs no key and runs either way.
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      CHROMA_PERSIST_DIR: ./data/chroma_eval
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Hard gate, no network and no LLM: every golden item must trace to a
+      # pinned accession and carry a verifiable label.
+      - name: Dataset integrity
+        run: python -m src.evaluation.dataset check
+
+      - name: Evaluation unit tests
+        run: pytest tests/test_benchmark.py tests/test_eval_dataset.py tests/test_eval_report.py -q
+
+      # Everything below needs a model key. Without one the job still passes on
+      # the checks above rather than failing or silently skipping the gate.
+      - name: Report no key
+        if: env.OPENROUTER_API_KEY == ''
+        run: echo "No OPENROUTER_API_KEY in secrets - deterministic checks only."
+
+      - name: Ingest the pinned corpus
+        if: env.OPENROUTER_API_KEY != ''
+        run: python -m src.evaluation.dataset ingest
+
+      # The scoring here is deterministic (exact match, citation overlap, signal
+      # agreement, abstention, injection); only producing the reports costs
+      # quota. Non-zero exit on a threshold regression fails the build.
+      - name: Product evaluation gate
+        if: env.OPENROUTER_API_KEY != ''
+        run: python -m src.evaluation.report_eval --companies 5 --runs 3
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-results
+          path: evaluation/results/
+          retention-days: 30

@@ -1,4 +1,5 @@
 import io
+from xml.sax.saxutils import escape as _esc
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -6,7 +7,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from src.models.schemas import DueDiligenceReport
+from src.models.schemas import DueDiligenceReport, InvestmentSignal
 
 
 def generate_pdf(report: DueDiligenceReport) -> bytes:
@@ -24,8 +25,8 @@ def generate_pdf(report: DueDiligenceReport) -> bytes:
 
     # Title
     title_style = ParagraphStyle("Title", parent=styles["Title"], fontSize=18, spaceAfter=6)
-    story.append(Paragraph(f"FinSight AI: {report.company_name}", title_style))
-    story.append(Paragraph(f"Report Date: {report.report_date}", styles["Normal"]))
+    story.append(Paragraph(f"FinSight AI: {_esc(report.company_name)}", title_style))
+    story.append(Paragraph(f"Report Date: {_esc(report.report_date)}", styles["Normal"]))
     story.append(Spacer(1, 8 * mm))
 
     # Signal + Confidence
@@ -37,10 +38,23 @@ def generate_pdf(report: DueDiligenceReport) -> bytes:
         "STRONG_SELL": "red",
     }
     col = signal_color.get(report.investment_signal.value, "black")
+    if report.investment_signal is InvestmentSignal.INSUFFICIENT_DATA:
+        note = (
+            ' &nbsp;&nbsp; <font color="red"><b>NO EVIDENCE GATHERED</b></font> '
+            "(no filing text and no financial data were retrieved, so no investment "
+            "signal was produced)"
+        )
+    elif report.degraded:
+        note = (
+            ' &nbsp;&nbsp; <font color="red"><b>DEGRADED</b></font> '
+            "(some agent data was unavailable)"
+        )
+    else:
+        note = ""
     story.append(
         Paragraph(
             f'<b>Signal:</b> <font color="{col}">{report.investment_signal.value}</font>  '
-            f"&nbsp;&nbsp; <b>Confidence:</b> {report.confidence_score:.0%}",
+            f"&nbsp;&nbsp; <b>Confidence:</b> {report.confidence_score:.0%}" + note,
             styles["Normal"],
         )
     )
@@ -48,7 +62,7 @@ def generate_pdf(report: DueDiligenceReport) -> bytes:
 
     # Executive Summary
     story.append(Paragraph("Executive Summary", styles["Heading2"]))
-    story.append(Paragraph(report.executive_summary, styles["Normal"]))
+    story.append(Paragraph(_esc(report.executive_summary), styles["Normal"]))
     story.append(Spacer(1, 6 * mm))
 
     # Financial Snapshot
@@ -85,30 +99,30 @@ def generate_pdf(report: DueDiligenceReport) -> bytes:
         story.append(
             Paragraph(
                 f'<font color="{col}"><b>[{risk.severity.value}]</b></font> '
-                f"<b>{risk.category}</b>: {risk.description}",
+                f"<b>{_esc(risk.category)}</b>: {_esc(risk.description)}",
                 styles["Normal"],
             )
         )
-        story.append(Paragraph(f"<i>Source: {risk.source_citation}</i>", styles["Normal"]))
+        story.append(Paragraph(f"<i>Source: {_esc(risk.source_citation)}</i>", styles["Normal"]))
         story.append(Spacer(1, 2 * mm))
 
     # Competitive Position
     story.append(Spacer(1, 4 * mm))
     story.append(Paragraph("Competitive Position", styles["Heading2"]))
-    story.append(Paragraph(report.competitive_position, styles["Normal"]))
+    story.append(Paragraph(_esc(report.competitive_position), styles["Normal"]))
 
     # Recent Developments
     story.append(Spacer(1, 4 * mm))
     story.append(Paragraph("Recent Developments", styles["Heading2"]))
     for dev in report.recent_developments:
-        story.append(Paragraph(f"• {dev}", styles["Normal"]))
+        story.append(Paragraph(f"• {_esc(dev)}", styles["Normal"]))
 
     # Disclaimer
     story.append(Spacer(1, 8 * mm))
     disclaimer_style = ParagraphStyle(
         "Disclaimer", parent=styles["Normal"], fontSize=8, textColor=colors.grey
     )
-    story.append(Paragraph(report.disclaimer, disclaimer_style))
+    story.append(Paragraph(_esc(report.disclaimer), disclaimer_style))
 
     doc.build(story)
     return buffer.getvalue()

@@ -1,15 +1,12 @@
 import logging
-import os
 import re
 from typing import Any, Mapping, cast
 
-import chromadb
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+from src.rag.chroma_client import get_chroma_client
 from src.rag.embeddings import get_embeddings
 from src.utils.data_fetchers import get_company_cik, get_latest_10k_text
-
-os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +19,7 @@ splitter = RecursiveCharacterTextSplitter(
 )
 
 
-def ingest_company_filing(company_name: str, ticker: str, chroma_dir: str) -> int:
+def ingest_company_filing(company_name: str, ticker: str) -> int:
     """
     Fetch SEC filing → chunk → embed → store in ChromaDB.
     Returns number of chunks stored.
@@ -63,7 +60,7 @@ def ingest_company_filing(company_name: str, ticker: str, chroma_dir: str) -> in
     logger.info(f"Created {len(chunks)} chunks")
 
     # ChromaDB
-    client = chromadb.PersistentClient(path=chroma_dir)
+    client = get_chroma_client()
 
     collection = client.get_or_create_collection(
         name="financial_filings",
@@ -78,9 +75,13 @@ def ingest_company_filing(company_name: str, ticker: str, chroma_dir: str) -> in
     embeddings = cast(Any, embeddings_model.embed_documents(texts))
     metadatas = cast(Any, metadatas)
 
-    ids = [f"{ticker}_{i}" for i in range(len(texts))]
+    # Namespace by CIK, not the guessed ticker — two different companies can
+    # share a truncated/guessed ticker (e.g. "American Express" and "American
+    # Airlines" both landing on "AMER"), which would collide and overwrite
+    # each other's chunks. CIK is the actual unique SEC identifier.
+    ids = [f"{cik}_{i}" for i in range(len(texts))]
 
-    collection.add(
+    collection.upsert(
         ids=ids,
         embeddings=embeddings,
         metadatas=cast(list[Mapping[str, Any]], metadatas),

@@ -1,6 +1,13 @@
-# Single-container stack: the root Dockerfile runs both FastAPI (:8000) and
-# Streamlit (:7860) via start.sh. `docker-compose up --build` brings up the
-# whole app as documented in the README Quick Start.
+# Two ways to run this stack from the same root Dockerfile:
+#
+#   docker-compose up --build
+#     Single container running both FastAPI and Streamlit via start.sh —
+#     matches the HuggingFace Space deployment exactly (one port, 7860).
+#
+#   docker-compose --profile split up --build
+#     API and UI as separate services/containers, so they scale and fail
+#     independently. Not the deployment target (HF Spaces only exposes one
+#     port) — use this locally or on a host that can expose two ports.
 services:
   finsight:
     build:
@@ -16,6 +23,41 @@ services:
       # CHROMA_PERSIST_DIR=/data/chroma set in the Dockerfile.
       - chroma_data:/data/chroma
     restart: unless-stopped
+
+  api:
+    profiles: ["split"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --workers 1
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - chroma_data:/data/chroma
+    restart: unless-stopped
+
+  ui:
+    profiles: ["split"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      streamlit run src/ui/app.py
+      --server.port=7860 --server.address=0.0.0.0 --server.headless=true
+      --server.enableCORS=false --server.enableXsrfProtection=false
+    ports:
+      - "7860:7860"
+    environment:
+      - API_URL=http://api:8000
+    env_file:
+      - .env
+    depends_on:
+      - api
+    restart: unless-stopped
+    healthcheck:
+      disable: true   # root Dockerfile's HEALTHCHECK targets :8000, which this container doesn't serve
 
 volumes:
   chroma_data:

@@ -35,6 +35,10 @@ jobs:
         run: |
           pytest
 
-      - name: Docker build (UI)
+      - name: Docker build (deployed image)
+        # The root Dockerfile bakes a HuggingFace model download + apt build
+        # deps at build time — too slow to run on every PR. Build it only on
+        # pushes to main, where a slow/broken image build still gets caught.
+        if: github.event_name == 'push'
         run: |
-          docker build -f docker/Dockerfile.ui -t finsight-ui .
+          docker build -f Dockerfile -t finsight-ai .
