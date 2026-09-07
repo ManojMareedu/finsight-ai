@@ -17,7 +17,7 @@ def get_retriever(company_filter: Optional[str] = None):
     Retrieval params are benchmark-tuned: MMR diversity (lambda_mult<1) lowered
     both retrieval precision and recall on the golden set, so we use plain
     similarity; k=8 (vs 6) raised recall with no precision cost. See WORKLOG
-    2026-07-15 (company_precision 0.82->1.0, gt_keyword_recall 0.61->0.77).
+    2026-07-15 (company_precision 0.82->~0.96-1.0, gt_keyword_recall 0.61->~0.79).
     """
 
     vectorstore = Chroma(

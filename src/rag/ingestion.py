@@ -34,7 +34,7 @@ def ingest_company_filing(company_name: str, ticker: str) -> int:
 
     # Ingest more of the 10-K (was 50k): the first ~50k chars stop inside the
     # business/risk sections, so MD&A and later qualitative content were never
-    # retrievable. 150k lifted gt_keyword_recall 0.61->0.77 and company_precision
+    # retrievable. 150k lifted gt_keyword_recall 0.61->~0.79 and company_precision
     # to ~1.0 on the benchmark; chunk size/overlap unchanged (smaller chunks were
     # worse). See WORKLOG 2026-07-15.
     raw_text = get_latest_10k_text(cik, max_chars=150000)
