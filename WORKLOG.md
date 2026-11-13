@@ -697,3 +697,16 @@ Delete the `System fallback` placeholder, tighten `injection_resistance`, then s
 paid LLM capacity on one wider eval run: 8-12 companies across sectors, three runs each. That
 buys a measured stability number and a citation gate that is either green or genuinely
 failing - and it is the only remaining work that changes what the project can claim.
+
+## 2026-11-13 - Fix scheduled Evaluation job (pyarrow/NumPy drift)
+
+The nightly `Evaluation` workflow failed every run since 2026-10-09 on an unchanged
+commit (`c11aa08`), at "Evaluation unit tests" with pytest exit code 2 (collection error).
+Root cause: `pyarrow` was unpinned (pulled in by `datasets`); a fresh install resolved
+pyarrow 26, which requires NumPy >= 2, while `chromadb==0.5.20` holds NumPy < 2. Import
+failed with `ImportError: pyarrow requires NumPy 2.0 or newer, found 1.26.4`. Local runs
+passed because the existing `.venv` still had pyarrow 23.
+
+Fix: pin `pyarrow>=15,<24` in `requirements.txt`. Verified in a fresh Python 3.11 venv
+built from requirements: `dataset check` OK, eval tests 54 passed, full suite 156 passed.
+Not verified: `docker build` (Docker daemon not running locally) - CI builds it on push.
